@@ -1,0 +1,636 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
+
+/* ── Reset ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ══════════════════════════════════════════════════════════
+   THEME TOKENS
+   ══════════════════════════════════════════════════════════ */
+
+/* Light (default) */
+.asb--light {
+  --asb-bg:            #ffffff;
+  --asb-border:        rgba(0, 0, 0, 0.07);
+  --asb-rule:          rgba(0, 0, 0, 0.06);
+
+  --asb-text:          #1f2937;
+  --asb-text-muted:    #9ca3af;
+  --asb-text-label:    #c4cad6;
+
+  --asb-accent:        #3b77ed;
+  --asb-accent-bg:     rgba(59, 119, 237, 0.08);
+  --asb-accent-text:   #3b77ed;
+
+  --asb-hover-bg:      #f4f6fb;
+  --asb-active-bar:    #3b77ed;
+
+  --asb-avatar-bg:     #3b77ed;
+  --asb-avatar-text:   #ffffff;
+
+  --asb-tooltip-bg:    #1e2840;
+  --asb-tooltip-text:  #eef2ff;
+
+  --asb-pop-bg:        #ffffff;
+  --asb-pop-border:    rgba(0, 0, 0, 0.09);
+  --asb-pop-shadow:    0 12px 40px rgba(0, 0, 0, 0.13), 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  --asb-role-bg:       rgba(59, 119, 237, 0.09);
+  --asb-role-text:     #3b77ed;
+
+  --asb-danger:        #e63d5a;
+  --asb-danger-bg:     rgba(230, 61, 90, 0.07);
+
+  --asb-pill-off-bg:   #e9ecf2;
+  --asb-pill-off-knob: #ffffff;
+  --asb-pill-on-bg:    #3b77ed;
+  --asb-pill-on-knob:  #ffffff;
+
+  --asb-width:         240px;
+  --asb-col-width:     66px;
+  --asb-tr:            0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark */
+.asb--dark {
+  --asb-bg:            #0f1623;
+  --asb-border:        rgba(255, 255, 255, 0.07);
+  --asb-rule:          rgba(255, 255, 255, 0.06);
+
+  --asb-text:          #dce6f5;
+  --asb-text-muted:    #4b5a72;
+  --asb-text-label:    #2b3550;
+
+  --asb-accent:        #4f8ef7;
+  --asb-accent-bg:     rgba(79, 142, 247, 0.12);
+  --asb-accent-text:   #6aa3f8;
+
+  --asb-hover-bg:      #182033;
+  --asb-active-bar:    #4f8ef7;
+
+  --asb-avatar-bg:     #4f8ef7;
+  --asb-avatar-text:   #ffffff;
+
+  --asb-tooltip-bg:    #1e2840;
+  --asb-tooltip-text:  #eef2ff;
+
+  --asb-pop-bg:        #161d2e;
+  --asb-pop-border:    rgba(255, 255, 255, 0.08);
+  --asb-pop-shadow:    0 12px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+
+  --asb-role-bg:       rgba(79, 142, 247, 0.12);
+  --asb-role-text:     #6aa3f8;
+
+  --asb-danger:        #f4536e;
+  --asb-danger-bg:     rgba(244, 83, 110, 0.09);
+
+  --asb-pill-off-bg:   #1e2840;
+  --asb-pill-off-knob: #3b4d6b;
+  --asb-pill-on-bg:    #4f8ef7;
+  --asb-pill-on-knob:  #ffffff;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR SHELL
+   ══════════════════════════════════════════════════════════ */
+.asb {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: var(--asb-width);
+  min-width: var(--asb-width);
+  min-height: 100vh;
+  background: var(--asb-bg);
+  border-right: 1px solid var(--asb-border);
+  font-family: 'DM Sans', sans-serif;
+  transition: width var(--asb-tr), min-width var(--asb-tr);
+  overflow: visible;
+  z-index: 50;
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.04);
+}
+
+.asb--collapsed {
+  width: var(--asb-col-width);
+  min-width: var(--asb-col-width);
+}
+
+/* ── TOP ──────────────────────────────────────────────────── */
+.asb__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 14px 16px;
+  gap: 8px;
+  min-height: 64px;
+}
+
+/* ── LOGO ─────────────────────────────────────────────────── */
+.asb__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.asb__logo-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.asb__logo-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.asb__logo-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--asb-text);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity var(--asb-tr), width var(--asb-tr);
+}
+
+/* hide text when collapsed */
+.asb--collapsed .asb__logo-name {
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+/* ── COLLAPSE BTN ─────────────────────────────────────────── */
+.asb__collapse-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--asb-border);
+  background: var(--asb-hover-bg);
+  color: var(--asb-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--asb-tr), color var(--asb-tr), border-color var(--asb-tr);
+}
+
+.asb__collapse-btn:hover {
+  background: var(--asb-accent-bg);
+  color: var(--asb-accent);
+  border-color: transparent;
+}
+
+.asb__collapse-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── RULE ─────────────────────────────────────────────────── */
+.asb__rule {
+  height: 1px;
+  background: var(--asb-rule);
+  margin: 0 14px;
+  flex-shrink: 0;
+}
+
+/* ── GROUP LABEL ──────────────────────────────────────────── */
+.asb__group-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--asb-text-label);
+  padding: 14px 18px 7px;
+  white-space: nowrap;
+}
+
+/* ── NAV ──────────────────────────────────────────────────── */
+.asb__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px 0;
+}
+
+/* ── TOOLTIP WRAPPER ──────────────────────────────────────── */
+.asb__tip-wrap {
+  position: relative;
+}
+
+/* ── NAV BUTTON ───────────────────────────────────────────── */
+.asb__nav-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 10px 11px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--asb-text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background var(--asb-tr), color var(--asb-tr);
+}
+
+.asb__nav-btn:hover {
+  background: var(--asb-hover-bg);
+}
+
+.asb__nav-btn--active {
+  background: var(--asb-accent-bg);
+  color: var(--asb-accent-text);
+  font-weight: 600;
+}
+
+/* active left-bar indicator */
+.asb__active-bar {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  border-radius: 0 3px 3px 0;
+  background: var(--asb-active-bar);
+}
+
+/* ── NAV ICON ─────────────────────────────────────────────── */
+.asb__nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.asb__nav-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── NAV LABEL ────────────────────────────────────────────── */
+.asb__nav-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 1;
+  transition: opacity var(--asb-tr);
+}
+
+.asb--collapsed .asb__nav-label {
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+/* ── TOOLTIP ──────────────────────────────────────────────── */
+.asb__tooltip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--asb-tooltip-bg);
+  color: var(--asb-tooltip-text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 999;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.asb__tooltip::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right-color: var(--asb-tooltip-bg);
+}
+
+/* ── FLEX GAP ─────────────────────────────────────────────── */
+.asb__flex-gap {
+  flex: 1;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PROFILE
+   ══════════════════════════════════════════════════════════ */
+.asb__profile-wrap {
+  position: relative;
+  padding: 14px 10px 10px;
+}
+
+.asb__profile-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--asb-border);
+  background: var(--asb-hover-bg);
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+  transition: background var(--asb-tr), border-color var(--asb-tr);
+}
+
+.asb__profile-btn:hover,
+.asb__profile-btn--open {
+  background: var(--asb-accent-bg);
+  border-color: rgba(59, 119, 237, 0.2);
+}
+
+/* collapsed: shrink to just the avatar */
+.asb--collapsed .asb__profile-btn {
+  padding: 9px;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+/* ── AVATAR ───────────────────────────────────────────────── */
+.asb__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--asb-avatar-bg);
+  color: var(--asb-avatar-text);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+}
+
+/* ── PROFILE TEXT ─────────────────────────────────────────── */
+.asb__profile-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity var(--asb-tr);
+}
+
+.asb--collapsed .asb__profile-text {
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.asb__profile-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--asb-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asb__profile-role {
+  font-size: 11px;
+  color: var(--asb-text-muted);
+  white-space: nowrap;
+}
+
+/* ── PROFILE CHEVRON ──────────────────────────────────────── */
+.asb__profile-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--asb-text-muted);
+  transition: transform var(--asb-tr), opacity var(--asb-tr);
+}
+
+.asb__profile-chevron svg {
+  width: 14px;
+  height: 14px;
+}
+
+.asb__profile-chevron--up {
+  transform: rotate(180deg);
+}
+
+.asb--collapsed .asb__profile-chevron {
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════════════════
+   POPOVER
+   ══════════════════════════════════════════════════════════ */
+.asb__popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 10px;
+  right: 10px;
+  background: var(--asb-pop-bg);
+  border: 1px solid var(--asb-pop-border);
+  border-radius: 14px;
+  box-shadow: var(--asb-pop-shadow);
+  overflow: hidden;
+  z-index: 300;
+  animation: asbPopIn 0.18s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* collapsed: pop to the right instead */
+.asb--collapsed .asb__popover {
+  left: calc(100% + 10px);
+  right: auto;
+  bottom: 0;
+  width: 210px;
+}
+
+@keyframes asbPopIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── POPOVER HEAD ─────────────────────────────────────────── */
+.asb__popover-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 14px 12px;
+}
+
+.asb__popover-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--asb-avatar-bg);
+  color: var(--asb-avatar-text);
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.asb__popover-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.asb__popover-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--asb-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asb__popover-email {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--asb-text-muted);
+}
+
+.asb__popover-email svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+/* ── POPOVER DIVIDER ──────────────────────────────────────── */
+.asb__popover-divider {
+  height: 1px;
+  background: var(--asb-rule);
+  margin: 0;
+}
+
+/* ── POPOVER ROW ──────────────────────────────────────────── */
+.asb__popover-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  color: var(--asb-text);
+}
+
+.asb__popover-row--meta {
+  background: transparent;
+}
+
+.asb__popover-row--btn {
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  transition: background var(--asb-tr);
+}
+
+.asb__popover-row--btn:hover {
+  background: var(--asb-hover-bg);
+}
+
+.asb__popover-row--danger {
+  color: var(--asb-danger);
+}
+
+.asb__popover-row--danger:hover {
+  background: var(--asb-danger-bg) !important;
+}
+
+.asb__popover-row-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.asb__popover-row-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.asb__popover-row-text {
+  flex: 1;
+}
+
+/* ── ROLE BADGE ───────────────────────────────────────────── */
+.asb__role-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--asb-role-bg);
+  color: var(--asb-role-text);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* ── THEME PILL (toggle switch) ───────────────────────────── */
+.asb__theme-pill {
+  position: relative;
+  width: 34px;
+  height: 19px;
+  border-radius: 999px;
+  background: var(--asb-pill-off-bg);
+  flex-shrink: 0;
+  transition: background 0.22s ease;
+  margin-left: auto;
+}
+
+.asb__theme-pill--on {
+  background: var(--asb-pill-on-bg);
+}
+
+.asb__theme-pill-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--asb-pill-off-knob);
+  transition: transform 0.22s ease, background 0.22s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.asb__theme-pill--on .asb__theme-pill-knob {
+  transform: translateX(15px);
+  background: var(--asb-pill-on-knob);
+}

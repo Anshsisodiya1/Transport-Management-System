@@ -1,0 +1,5 @@
+.env
+node_modules
+dist
+firebaseKey.json
+backend/config/firebaseKey.json

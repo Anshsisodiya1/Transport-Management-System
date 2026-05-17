@@ -1,0 +1,89 @@
+.dashboard-container {
+  padding: 25px;
+  background: #f5f7fb;
+  min-height: 100vh;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  text-align: center;
+  transition: 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-card h3 {
+  font-size: 16px;
+  color: #555;
+}
+
+.stat-card p {
+  font-size: 22px;
+  font-weight: bold;
+  color: #007bff;
+}
+
+/* ACTION CARDS */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.action-card {
+  background: white;
+  padding: 25px;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.action-card:hover {
+  transform: translateY(-8px);
+}
+
+.action-card .icon {
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+
+.action-card h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.action-card p {
+  font-size: 13px;
+  color: gray;
+  margin-top: 5px;
+}
+
+/* COLORS */
+.action-card.routes {
+  border-left: 5px solid #00bcd4;
+}
+
+.action-card.buses {
+  border-left: 5px solid #007bff;
+}
