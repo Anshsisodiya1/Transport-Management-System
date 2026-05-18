@@ -9,7 +9,7 @@ const {
   seatOccupancy,
 } = require("../controllers/reportController");
 
-// 🚌 REPORT ROUTES
+//  REPORT ROUTES
 router.get("/buses/all", allBuses);
 router.get("/buses/with-driver", busWithDriver);
 router.get("/buses/with-students", busWithStudents);

@@ -11,18 +11,18 @@ const {
 const verifyToken = require("../middleware/authMiddleware");
 const checkRole = require("../middleware/roleMiddleware");
 
-// ================= 🚌 BUS ROUTES =================
+// =================  BUS ROUTES =================
 
-// ➕ Create Bus (Admin only)
+//  Create Bus (Admin only)
 router.post("/", verifyToken, checkRole("admin"), addBus);
 
-// 📄 Get All Buses (Admin + Driver access if needed)
+// Get All Buses (Admin + Driver access if needed)
 router.get("/", verifyToken, checkRole("admin", "driver"), getBuses);
 
-// ✏️ Update Bus (Admin only)
+//  Update Bus (Admin only)
 router.put("/:id", verifyToken, checkRole("admin"), updateBus);
 
-// ❌ Delete Bus (Admin only)
+// Delete Bus (Admin only)
 router.delete("/:id", verifyToken, checkRole("admin"), deleteBus);
 
 module.exports = router;

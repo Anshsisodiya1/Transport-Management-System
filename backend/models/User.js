@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   // Optional (used only for driver)
   userId: {
     type: String,
-    sparse: true, // ✅ prevents duplicate null error
+    sparse: true, //  prevents duplicate null error
   },
 
   // Used for student

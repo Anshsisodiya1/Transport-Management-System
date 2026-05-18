@@ -31,7 +31,7 @@ const routeSchema = new mongoose.Schema(
       required: true,
     },
 
-    // 🔥 UPDATED STOPS (IMPORTANT)
+    //  UPDATED STOPS (IMPORTANT)
     stops: [stopSchema],
 
     startPoint: {

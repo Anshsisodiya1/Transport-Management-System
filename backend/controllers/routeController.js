@@ -1,34 +1,96 @@
 const Route = require("../models/Route");
 
-//  Create Route
+// CREATE ROUTE
 exports.createRoute = async (req, res) => {
-  const { routeNumber, routeName, stops, startPoint, endPoint } = req.body;
+  try {
+    const {
+      routeNumber,
+      routeName,
+      stops,
+      startPoint,
+      endPoint,
+      timings,
+    } = req.body;
 
-  const route = await Route.create({
-    routeNumber,
-    routeName,
-    stops,
-    startPoint,
-    endPoint,
-  });
+    const route = await Route.create({
+      routeNumber,
+      routeName,
+      stops,
+      startPoint,
+      endPoint,
+      timings,
+    });
 
-  res.status(201).json(route);
+    res.status(201).json(route);
+
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      message: "Failed to create route",
+    });
+  }
 };
 
-// Get Routes
+// GET ROUTES
 exports.getRoutes = async (req, res) => {
-  const routes = await Route.find();
-  res.json(routes);
+  try {
+    const routes = await Route.find();
+    res.json(routes);
+
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch routes",
+    });
+  }
 };
 
-// Update Route
+// UPDATE ROUTE
 exports.updateRoute = async (req, res) => {
-  const route = await Route.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(route);
+  try {
+    const {
+      routeNumber,
+      routeName,
+      stops,
+      startPoint,
+      endPoint,
+      timings,
+    } = req.body;
+
+    const route = await Route.findByIdAndUpdate(
+      req.params.id,
+      {
+        routeNumber,
+        routeName,
+        stops,
+        startPoint,
+        endPoint,
+        timings,
+      },
+      { new: true }
+    );
+
+    res.json(route);
+
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to update route",
+    });
+  }
 };
 
-//  Delete Route
+// DELETE ROUTE
 exports.deleteRoute = async (req, res) => {
-  await Route.findByIdAndDelete(req.params.id);
-  res.json({ message: "Route deleted" });
+  try {
+    await Route.findByIdAndDelete(req.params.id);
+
+    res.json({
+      message: "Route deleted",
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to delete route",
+    });
+  }
 };

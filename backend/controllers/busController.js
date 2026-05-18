@@ -1,7 +1,7 @@
 const Bus = require("../models/Bus");
 const Route = require("../models/Route");
 
-// ➕ Add Bus
+//  Add Bus
 exports.addBus = async (req, res) => {
   try {
     const { busNumber, capacity, route, gpsDeviceId } = req.body;
@@ -30,19 +30,19 @@ exports.addBus = async (req, res) => {
   }
 };
 
-// 📄 Get All Buses
+//  Get All Buses
 exports.getBuses = async (req, res) => {
   const buses = await Bus.find().populate("route");
   res.json(buses);
 };
 
-// ✏️ Update Bus
+// Update Bus
 exports.updateBus = async (req, res) => {
   const bus = await Bus.findByIdAndUpdate(req.params.id, req.body, { new: true });
   res.json(bus);
 };
 
-// ❌ Delete Bus
+//  Delete Bus
 exports.deleteBus = async (req, res) => {
   await Bus.findByIdAndDelete(req.params.id);
   res.json({ message: "Bus deleted" });

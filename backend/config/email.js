@@ -69,9 +69,9 @@ const sendEmail = async ({ to, name, email, password, role }) => {
 
     await transporter.sendMail(mailOptions);
 
-    console.log(`✅ Email sent to ${safeEmail}`);
+    console.log(`Email sent to ${safeEmail}`);
   } catch (error) {
-    console.error("❌ Email Error:", error);
+    console.error(" Email Error:", error);
   }
 };
 

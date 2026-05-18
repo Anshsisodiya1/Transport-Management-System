@@ -1,6 +1,6 @@
 const Student = require("../models/Student");
 
-// ✅ Approve
+// Approve
 exports.approveApplication = async (req, res) => {
   const student = await Student.findByIdAndUpdate(
     req.params.id,
@@ -11,7 +11,7 @@ exports.approveApplication = async (req, res) => {
   res.json({ message: "Approved", student });
 };
 
-// ❌ Reject
+//  Reject
 exports.rejectApplication = async (req, res) => {
   const student = await Student.findByIdAndUpdate(
     req.params.id,

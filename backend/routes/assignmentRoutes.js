@@ -8,16 +8,16 @@ const {
   updateAssignment,
 } = require("../controllers/assignmentController");
 
-// 🔥 Assign (driver or student)
+//  Assign (driver or student)
 router.post("/assign", assign);
 
-// 🔥 Get all assignments
+//  Get all assignments
 router.get("/", getAllAssignments);
 
-// 🔥 Delete assignment
+//  Delete assignment
 router.delete("/:id", deleteAssignment);
 
-// ✅ FIXED ROUTE (IMPORTANT)
+// FIXED ROUTE (IMPORTANT)
 router.put("/:id", updateAssignment);
 
 module.exports = router;

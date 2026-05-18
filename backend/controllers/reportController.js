@@ -3,7 +3,7 @@ const Assignment = require("../models/Assignment");
 const Driver = require("../models/Driver");
 const Student = require("../models/Student");
 
-// ================= 🚌 1. ALL BUSES =================
+// =================  ALL BUSES =================
 const allBuses = async (req, res) => {
   try {
     const buses = await Bus.find().populate("route").lean();
@@ -25,7 +25,7 @@ const allBuses = async (req, res) => {
   }
 };
 
-// ================= 👨‍✈️ 2. BUS WITH DRIVER (FULL DETAIL) =================
+// =================  BUS WITH DRIVER (FULL DETAIL) =================
 const busWithDriver = async (req, res) => {
   try {
     const buses = await Bus.find().populate("route").lean();
@@ -76,7 +76,7 @@ const busWithDriver = async (req, res) => {
   }
 };
 
-// ================= 🎓 3. BUS WITH STUDENTS (FULL DETAIL) =================
+// ================= BUS WITH STUDENTS (FULL DETAIL) =================
 const busWithStudents = async (req, res) => {
   try {
     const buses = await Bus.find().populate("route").lean();
