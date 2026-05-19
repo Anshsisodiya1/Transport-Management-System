@@ -21,7 +21,7 @@ import BusSeatLayout from "./components/BusSeatLayout";
 import Reports from "./pages/Reports";
 import DriverDashboard from "./pages/DriverDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
-
+import "leaflet/dist/leaflet.css";
 function App() {
   const [notification, setNotification] = useState(null);
 

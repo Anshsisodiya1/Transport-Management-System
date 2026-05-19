@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -33,14 +33,13 @@ import { BiSolidBadgeCheck } from "react-icons/bi";
 
 import "../styles/driver-dashboard.css";
 
+const SERVER = "http://localhost:5000";
+
 function DriverDashboard() {
   const [data, setData] = useState(null);
   const [openProfile, setOpenProfile] = useState(false);
   const [tripStarted, setTripStarted] = useState(false);
-  const [socket, setSocket] = useState(null);
-  const [watchId, setWatchId] = useState(null);
   const [tripDuration, setTripDuration] = useState(0);
-  const [tripTimer, setTripTimer] = useState(null);
   const [coords, setCoords] = useState(null);
   const [gpsStatus, setGpsStatus] = useState("idle"); // idle | active | error
   const [socketConnected, setSocketConnected] = useState(false);
@@ -50,22 +49,40 @@ function DriverDashboard() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // ── Socket Init ──
+  // FIX: Use refs for socket and watchId so they are always stable
+  // (previously socket was in state which caused stale closure issues)
+  const socketRef = useRef(null);
+  const watchIdRef = useRef(null);
+  const timerRef = useRef(null);
+
+  // ── Socket Init (useRef instead of useState to avoid stale closures) ──
   useEffect(() => {
-    const newSocket = io("http://localhost:5000");
-    newSocket.on("connect", () => setSocketConnected(true));
-    newSocket.on("disconnect", () => setSocketConnected(false));
-    setSocket(newSocket);
-    return () => newSocket.disconnect();
+    const s = io(SERVER, {
+      transports: ["polling", "websocket"],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+    });
+    s.on("connect", () => {
+      console.log("✅ Driver socket connected");
+      setSocketConnected(true);
+    });
+    s.on("disconnect", () => {
+      console.log("🔌 Driver socket disconnected");
+      setSocketConnected(false);
+    });
+    socketRef.current = s;
+
+    return () => s.disconnect();
   }, []);
 
-  // ── Fetch Driver ──
+  // ── Fetch Driver Data ──
   useEffect(() => {
     const fetchDriver = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/driver/me", {
+        const res = await axios.get(`${SERVER}/api/driver/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log("Driver API Response:", res.data);
         setData(res.data);
       } catch (err) {
         console.error("API Error:", err.message);
@@ -77,13 +94,15 @@ function DriverDashboard() {
   // ── Trip Timer ──
   useEffect(() => {
     if (tripStarted) {
-      const t = setInterval(() => setTripDuration((d) => d + 1), 1000);
-      setTripTimer(t);
+      timerRef.current = setInterval(
+        () => setTripDuration((d) => d + 1),
+        1000
+      );
     } else {
-      clearInterval(tripTimer);
+      clearInterval(timerRef.current);
       setTripDuration(0);
     }
-    return () => clearInterval(tripTimer);
+    return () => clearInterval(timerRef.current);
   }, [tripStarted]);
 
   // ── Close profile on outside click ──
@@ -95,6 +114,14 @@ function DriverDashboard() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // ── Cleanup on unmount ──
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+      clearInterval(timerRef.current);
+    };
+  }, []);
+
   const formatDuration = (s) => {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
@@ -103,59 +130,95 @@ function DriverDashboard() {
   };
 
   const logout = () => {
+    // If trip is active, end it before logging out
+    if (tripStarted) {
+      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+      socketRef.current?.emit("endTrip", { driverId: data?.driver?._id });
+    }
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     navigate("/");
   };
 
   const handleTripToggle = () => {
-    if (!socket) {
-      alert("Socket not connected yet");
+    const socket = socketRef.current;
+
+    if (!socket || !socket.connected) {
+      alert("Socket not connected. Please wait a moment and try again.");
+      return;
+    }
+
+    if (!data?.driver?._id || !data?.bus?._id) {
+      alert("Driver or bus data not loaded yet. Please wait.");
       return;
     }
 
     if (!tripStarted) {
-      setTripStarted(true);
-      setGpsStatus("active");
+      // ── START TRIP ──
       if (!navigator.geolocation) {
-        alert("Geolocation not supported");
+        alert("Geolocation is not supported by your browser.");
         return;
       }
 
+      setTripStarted(true);
+      setGpsStatus("active");
+
+      // FIX: Emit startTrip so students receive the tripStarted event
+      socket.emit("startTrip", {
+        driverId: data.driver._id,
+        busId: data.bus._id,
+      });
+      console.log("🟢 startTrip emitted for bus:", data.bus._id);
+
+      // Start watching GPS position
       const id = navigator.geolocation.watchPosition(
         ({ coords: c }) => {
+          console.log("📍 Sending location:", c.latitude, c.longitude);
+
           setCoords({
             lat: c.latitude.toFixed(5),
             lng: c.longitude.toFixed(5),
           });
+
           socket.emit("sendLocation", {
-            driverId: data?._id,
-            busId: data?.bus?._id,
-            routeId: data?.route?._id,
+            driverId: data.driver._id,
+            busId: data.bus._id,
+            routeId: data.route?._id,
             latitude: c.latitude,
             longitude: c.longitude,
           });
         },
         (err) => {
-          console.warn("GPS:", err.message);
+          console.warn("GPS error:", err.message);
           setGpsStatus("error");
         },
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 },
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
       );
-      setWatchId(id);
+
+      watchIdRef.current = id;
+
     } else {
+      // ── END TRIP ──
       setTripStarted(false);
       setGpsStatus("idle");
       setCoords(null);
-      if (watchId) navigator.geolocation.clearWatch(watchId);
-      socket.emit("endTrip", { driverId: data?._id });
       setStopsDone([]);
+
+      if (watchIdRef.current) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+
+      socket.emit("endTrip", {
+        driverId: data.driver._id,
+      });
+      console.log("🛑 endTrip emitted");
     }
   };
 
   const toggleStop = (stop) => {
     setStopsDone((prev) =>
-      prev.includes(stop) ? prev.filter((s) => s !== stop) : [...prev, stop],
+      prev.includes(stop) ? prev.filter((s) => s !== stop) : [...prev, stop]
     );
   };
 
@@ -166,10 +229,19 @@ function DriverDashboard() {
 
   const navItems = [
     { id: "overview", icon: <FaTachometerAlt />, label: "Overview" },
-    { id: "route", icon: <FaRoute />, label: "Route" },
-    { id: "bus", icon: <FaBus />, label: "Bus" },
-    { id: "profile", icon: <FaUserCircle />, label: "Profile" },
+    { id: "route",    icon: <FaRoute />,         label: "Route"    },
+    { id: "bus",      icon: <FaBus />,            label: "Bus"      },
+    { id: "profile",  icon: <FaUserCircle />,     label: "Profile"  },
   ];
+
+  // ── Loading ──
+  if (!data)
+    return (
+      <div className="dd-loading">
+        <div className="dd-spinner" />
+        <span>Loading your dashboard…</span>
+      </div>
+    );
 
   return (
     <div className="dd-root">
@@ -191,7 +263,7 @@ function DriverDashboard() {
           <div className="dd-profile-wrap">
             <button
               className="dd-profile-btn"
-              onClick={() => setOpenProfile(!openProfile)}
+              onClick={() => setOpenProfile((p) => !p)}
             >
               <div className="dd-avatar">
                 {driver?.name?.[0]?.toUpperCase() || "D"}
@@ -214,15 +286,9 @@ function DriverDashboard() {
                   </div>
                 </div>
                 <div className="dd-dropdown-info">
-                  <span>
-                    <FaEnvelope /> {driver?.email}
-                  </span>
-                  <span>
-                    <FaPhone /> {driver?.contact}
-                  </span>
-                  <span>
-                    <FaIdCard /> {driver?.license}
-                  </span>
+                  <span><FaEnvelope /> {driver?.email}</span>
+                  <span><FaPhone /> {driver?.contact}</span>
+                  <span><FaIdCard /> {driver?.license}</span>
                 </div>
                 <button className="dd-logout-btn" onClick={logout}>
                   <FaSignOutAlt /> Sign Out
@@ -258,13 +324,19 @@ function DriverDashboard() {
           <button
             className={`dd-trip-btn ${tripStarted ? "end" : "start"}`}
             onClick={handleTripToggle}
+            disabled={!socketConnected || !data?.assigned}
+            title={
+              !socketConnected
+                ? "Waiting for connection…"
+                : !data?.assigned
+                ? "No bus/route assigned"
+                : ""
+            }
           >
             {tripStarted ? (
-              <> End Trip</>
+              <>End Trip</>
             ) : (
-              <>
-                <MdNavigation /> Start Trip
-              </>
+              <><MdNavigation /> Start Trip</>
             )}
           </button>
         </div>
@@ -298,6 +370,7 @@ function DriverDashboard() {
 
         {/* Content */}
         <main className="dd-main">
+
           {/* ── OVERVIEW ── */}
           {activeSection === "overview" && (
             <div className="dd-section">
@@ -305,12 +378,9 @@ function DriverDashboard() {
                 Welcome back, {driver?.name?.split(" ")[0] || "Driver"} 👋
               </h2>
 
-              {/* Stat cards */}
               <div className="dd-stat-grid">
                 <div className="dd-stat-card accent">
-                  <div className="dd-stat-icon">
-                    <FaBus />
-                  </div>
+                  <div className="dd-stat-icon"><FaBus /></div>
                   <div className="dd-stat-body">
                     <div className="dd-stat-val">{bus?.busNumber || "—"}</div>
                     <div className="dd-stat-lbl">Assigned Bus</div>
@@ -318,9 +388,7 @@ function DriverDashboard() {
                 </div>
 
                 <div className="dd-stat-card green">
-                  <div className="dd-stat-icon">
-                    <MdAssignment />
-                  </div>
+                  <div className="dd-stat-icon"><MdAssignment /></div>
                   <div className="dd-stat-body">
                     <div className="dd-stat-val">
                       {data?.assigned ? "Active" : "None"}
@@ -330,21 +398,15 @@ function DriverDashboard() {
                 </div>
 
                 <div className="dd-stat-card purple">
-                  <div className="dd-stat-icon">
-                    <FaRoute />
-                  </div>
+                  <div className="dd-stat-icon"><FaRoute /></div>
                   <div className="dd-stat-body">
-                    <div className="dd-stat-val">
-                      {route?.routeNumber || "—"}
-                    </div>
+                    <div className="dd-stat-val">{route?.routeNumber || "—"}</div>
                     <div className="dd-stat-lbl">Route No.</div>
                   </div>
                 </div>
 
                 <div className="dd-stat-card orange">
-                  <div className="dd-stat-icon">
-                    <FaMapMarkerAlt />
-                  </div>
+                  <div className="dd-stat-icon"><FaMapMarkerAlt /></div>
                   <div className="dd-stat-body">
                     <div className="dd-stat-val">{stops.length}</div>
                     <div className="dd-stat-lbl">Total Stops</div>
@@ -352,34 +414,23 @@ function DriverDashboard() {
                 </div>
               </div>
 
-              {/* Assignment status */}
               <div className="dd-card">
                 <div className="dd-card-head">
                   <BiSolidBadgeCheck /> Assignment Status
                 </div>
                 <div className="dd-assign-status">
-                  <div
-                    className={`dd-assign-badge ${data?.assigned ? "yes" : "no"}`}
-                  >
+                  <div className={`dd-assign-badge ${data?.assigned ? "yes" : "no"}`}>
                     {data?.assigned ? (
-                      <>
-                        <IoCheckmarkCircle /> Fully Assigned
-                      </>
+                      <><IoCheckmarkCircle /> Fully Assigned</>
                     ) : (
-                      <>
-                        <IoCloseCircle /> Not Assigned Yet
-                      </>
+                      <><IoCloseCircle /> Not Assigned Yet</>
                     )}
                   </div>
                   <div className="dd-assign-detail">
-                    <span>
-                      <b>Bus:</b> {bus?.busNumber || "—"}
-                    </span>
+                    <span><b>Bus:</b> {bus?.busNumber || "—"}</span>
                     <span>
                       <b>Route:</b>{" "}
-                      {route
-                        ? `${route.routeNumber} – ${route.routeName}`
-                        : "—"}
+                      {route ? `${route.routeNumber} – ${route.routeName}` : "—"}
                     </span>
                   </div>
                 </div>
@@ -402,18 +453,13 @@ function DriverDashboard() {
                       <div className="dd-route-num">{route.routeNumber}</div>
                       <div className="dd-route-name">{route.routeName}</div>
                       <div className="dd-route-path">
-                        <span className="dd-endpoint start">
-                          {route.startPoint}
-                        </span>
+                        <span className="dd-endpoint start">{route.startPoint}</span>
                         <div className="dd-route-line" />
-                        <span className="dd-endpoint end">
-                          {route.endPoint}
-                        </span>
+                        <span className="dd-endpoint end">{route.endPoint}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Stops with tap-to-complete */}
                   <div className="dd-card">
                     <div className="dd-card-head">
                       <FaMapMarkerAlt /> Stops
@@ -429,9 +475,7 @@ function DriverDashboard() {
                           key={i}
                           className={`dd-stop-item ${stopsDone.includes(s) ? "done" : ""}`}
                           onClick={() => tripStarted && toggleStop(s)}
-                          style={{
-                            cursor: tripStarted ? "pointer" : "default",
-                          }}
+                          style={{ cursor: tripStarted ? "pointer" : "default" }}
                         >
                           <div className="dd-stop-dot">
                             {stopsDone.includes(s) ? (
@@ -441,7 +485,7 @@ function DriverDashboard() {
                             )}
                           </div>
                           <span className="dd-stop-name">
-                            {typeof s === "string" ? s : s.stopName}
+                            {typeof s === "string" ? s : s.name || s.stopName}
                           </span>
                           {tripStarted && !stopsDone.includes(s) && (
                             <span className="dd-stop-tap">tap to mark</span>
@@ -451,7 +495,6 @@ function DriverDashboard() {
                     </div>
                   </div>
 
-                  {/* Timings */}
                   <div className="dd-card">
                     <div className="dd-card-head">
                       <FaClock /> Timings
@@ -469,9 +512,7 @@ function DriverDashboard() {
                 <div className="dd-empty-state">
                   <FaRoute />
                   <p>No route assigned yet</p>
-                  <span>
-                    Contact your administrator to get a route assigned
-                  </span>
+                  <span>Contact your administrator to get a route assigned</span>
                 </div>
               )}
             </div>
@@ -488,9 +529,7 @@ function DriverDashboard() {
                 <div className="dd-card">
                   <div className="dd-card-head">Assigned Bus</div>
                   <div className="dd-bus-hero">
-                    <div className="dd-bus-icon-wrap">
-                      <FaBus />
-                    </div>
+                    <div className="dd-bus-icon-wrap"><FaBus /></div>
                     <div className="dd-bus-number">{bus?.busNumber}</div>
                   </div>
                   <div className="dd-bus-details">
@@ -510,16 +549,18 @@ function DriverDashboard() {
                       <span className="dd-key">GPS Status</span>
                       <span className={`dd-val gps-${gpsStatus}`}>
                         {gpsStatus === "active" ? (
-                          <>
-                            <MdGpsFixed /> Active
-                          </>
+                          <><MdGpsFixed /> Active</>
                         ) : gpsStatus === "error" ? (
-                          <>
-                            <MdGpsOff /> Error
-                          </>
+                          <><MdGpsOff /> Error</>
                         ) : (
-                          "—"
+                          "Idle"
                         )}
+                      </span>
+                    </div>
+                    <div className="dd-kv">
+                      <span className="dd-key">Trip Status</span>
+                      <span className="dd-val">
+                        {tripStarted ? "🟢 In Progress" : "⚪ Not Started"}
                       </span>
                     </div>
                   </div>
@@ -553,27 +594,19 @@ function DriverDashboard() {
                 </div>
                 <div className="dd-profile-details">
                   <div className="dd-kv">
-                    <span className="dd-key">
-                      <FaEnvelope /> Email
-                    </span>
+                    <span className="dd-key"><FaEnvelope /> Email</span>
                     <span className="dd-val">{driver?.email || "—"}</span>
                   </div>
                   <div className="dd-kv">
-                    <span className="dd-key">
-                      <FaPhone /> Contact
-                    </span>
+                    <span className="dd-key"><FaPhone /> Contact</span>
                     <span className="dd-val">{driver?.contact || "—"}</span>
                   </div>
                   <div className="dd-kv">
-                    <span className="dd-key">
-                      <FaIdCard /> License No.
-                    </span>
+                    <span className="dd-key"><FaIdCard /> License No.</span>
                     <span className="dd-val">{driver?.license || "—"}</span>
                   </div>
                   <div className="dd-kv">
-                    <span className="dd-key">
-                      <FaIdCard /> Aadhar No.
-                    </span>
+                    <span className="dd-key"><FaIdCard /> Aadhar No.</span>
                     <span className="dd-val">{driver?.aadhar || "—"}</span>
                   </div>
                 </div>
@@ -584,6 +617,7 @@ function DriverDashboard() {
               </button>
             </div>
           )}
+
         </main>
       </div>
 

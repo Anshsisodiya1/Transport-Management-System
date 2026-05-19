@@ -29,21 +29,20 @@ exports.getDriverData = async (req, res) => {
     // FORMAT ROUTE STOPS
     let formattedRoute = null;
 
-if (assignment?.bus?.route) {
-  formattedRoute = {
-    ...assignment.bus.route.toObject(),
+    if (assignment?.bus?.route) {
+      formattedRoute = {
+        ...assignment.bus.route.toObject(),
 
-    // FIXED STOPS
-    stops: assignment.bus.route.stops.map(
-      (s) => s.name
-    ),
-  };
-}
-console.log(assignment?.bus?.route);
+        // FIXED STOPS
+        stops: assignment.bus.route.stops.map((s) => s.name),
+      };
+    }
+    console.log(assignment?.bus?.route);
     return res.json({
       success: true,
 
       driver: {
+        _id: user?._id,
         name: user?.name || "N/A",
         email: user?.email || "N/A",
         contact: user?.phone || "N/A",
@@ -58,7 +57,6 @@ console.log(assignment?.bus?.route);
       // UPDATED ROUTE
       route: formattedRoute,
     });
-
   } catch (err) {
     console.log("Driver API error:", err);
 

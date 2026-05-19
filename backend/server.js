@@ -20,9 +20,12 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "*",
+    methods: ["GET", "POST"],
+    credentials: true,
   },
+  transports: ["websocket", "polling"], // IMPORTANT
+  allowEIO3: true,
 });
-
 // ================= MIDDLEWARE =================
 app.use(cors());
 app.use(express.json());
@@ -67,37 +70,44 @@ io.on("connection", (socket) => {
 
   // DRIVER SENDS LIVE LOCATION
 
-  socket.on("sendLocation", async (data) => {
-    try {
-      const { driverId, lat, lng } = data;
+socket.on("sendLocation", async (data) => {
+  try {
 
-      if (!driverId || lat == null || lng == null) return;
+    console.log("📍 LOCATION RECEIVED:", data);
 
-      const trip = await Trip.findOne({
-        driver: driverId,
-        status: "ongoing",
-      });
+    const {
+      driverId,
+      busId,
+      routeId,
+      latitude,
+      longitude,
+    } = data;
 
-      if (!trip) return;
-
-      // SAVE LOCATION
-      trip.currentLocation = { lat, lng };
-      await trip.save();
-
-      //  SEND ONLY TO THIS BUS USERS (IMPORTANT FIX)
-      io.to(String(trip.bus)).emit("liveLocation", {
-        driverId,
-        busId: trip.bus,
-        lat,
-        lng,
-      });
-
-      console.log(` Location sent for bus ${trip.bus}`);
-
-    } catch (err) {
-      console.log("Socket error:", err.message);
+    if (
+      !driverId ||
+      !busId ||
+      latitude == null ||
+      longitude == null
+    ) {
+      console.log("❌ Invalid location data");
+      return;
     }
-  });
+
+    // SEND LIVE LOCATION TO STUDENTS
+    io.to(String(busId)).emit("liveLocation", {
+      driverId,
+      busId,
+      routeId,
+      lat: latitude,
+      lng: longitude,
+    });
+
+    console.log(`✅ Live location sent for bus ${busId}`);
+
+  } catch (err) {
+    console.log("❌ Socket error:", err.message);
+  }
+});
 
 // Driver starts trip
 
