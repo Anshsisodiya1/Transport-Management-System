@@ -445,3 +445,70 @@ body {
   background: var(--border);
   flex-shrink: 0;
 }
+
+/* ── Append these rules to your existing AdminDashboard.css ── */
+
+/* 6-column grid so new cards sit in two neat rows of 3 */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .actions-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .actions-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Register card ── */
+.action-card.register .action-icon-wrap {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  color: #0284c7;
+}
+.action-card.register:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.12);
+}
+.action-card.register .action-chip {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+/* ── Assignments card ── */
+.action-card.assignments .action-icon-wrap {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #d97706;
+}
+.action-card.assignments:hover {
+  border-color: #fcd34d;
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.12);
+}
+.action-card.assignments .action-chip {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* ── Settings card ── */
+.action-card.settings .action-icon-wrap {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #475569;
+}
+.action-card.settings:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 24px rgba(71, 85, 105, 0.1);
+}
+.action-card.settings .action-chip {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* live fleet css  */
+.action-card.live-fleet {
+  border-left: 3px solid #10b981;
+}
+.action-card.live-fleet:hover {
+  background: rgba(16, 185, 129, 0.06);
+}

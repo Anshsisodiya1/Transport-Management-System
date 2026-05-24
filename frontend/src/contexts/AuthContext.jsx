@@ -5,35 +5,76 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
+
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load from localStorage on refresh
+  // ───────── LOAD USER ON REFRESH ─────────
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
+
     const savedUser = localStorage.getItem("user");
 
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+    if (savedUser) {
+
+      const parsedUser = JSON.parse(savedUser);
+
+      let savedToken = null;
+
+      // ROLE BASED TOKEN
+      if (parsedUser.role === "student") {
+        savedToken = localStorage.getItem("studentToken");
+      }
+
+      else if (parsedUser.role === "driver") {
+        savedToken = localStorage.getItem("driverToken");
+      }
+
+      else if (parsedUser.role === "admin") {
+        savedToken = localStorage.getItem("adminToken");
+      }
+
+      if (savedToken) {
+        setUser(parsedUser);
+        setToken(savedToken);
+      }
     }
 
     setLoading(false);
+
   }, []);
 
-  // LOGIN FUNCTION
+  // ───────── LOGIN FUNCTION ─────────
   const login = (token, userData) => {
-    localStorage.setItem("token", token);
+
+    // SAVE ROLE BASED TOKEN
+    if (userData.role === "student") {
+      localStorage.setItem("studentToken", token);
+    }
+
+    else if (userData.role === "driver") {
+      localStorage.setItem("driverToken", token);
+    }
+
+    else if (userData.role === "admin") {
+      localStorage.setItem("adminToken", token);
+    }
+
+    // SAVE USER
     localStorage.setItem("user", JSON.stringify(userData));
 
     setToken(token);
     setUser(userData);
   };
 
-  // LOGOUT FUNCTION
+  // ───────── LOGOUT FUNCTION ─────────
   const logout = () => {
-    localStorage.removeItem("token");
+
+    // REMOVE ALL TOKENS
+    localStorage.removeItem("studentToken");
+    localStorage.removeItem("driverToken");
+    localStorage.removeItem("adminToken");
+
     localStorage.removeItem("user");
 
     setToken(null);
@@ -55,3 +96,5 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export default AuthContext;

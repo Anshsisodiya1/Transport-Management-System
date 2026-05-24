@@ -932,7 +932,241 @@
   color: var(--accent);
   background: var(--accent-light);
 }
+/* ─────────────────────────────────────────
+   Student Roster — append these to your
+   existing driver-dashboard.css
+   ───────────────────────────────────────── */
 
+/* Summary bar above the table */
+.dd-roster-summary {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.dd-roster-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text-secondary, #6b7280);
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+
+.dd-roster-summary-item svg {
+  opacity: 0.55;
+  font-size: 13px;
+}
+
+.dd-roster-summary-item strong {
+  color: var(--text-primary, #111827);
+  font-weight: 600;
+}
+
+/* Search bar */
+.dd-roster-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  position: relative;
+}
+
+.dd-search-icon {
+  color: var(--text-secondary, #9ca3af);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.dd-roster-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--text-primary, #111827);
+}
+
+.dd-roster-input::placeholder {
+  color: var(--text-secondary, #9ca3af);
+}
+
+.dd-search-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text-secondary, #9ca3af);
+  line-height: 1;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.dd-search-clear:hover {
+  color: var(--text-primary, #374151);
+}
+
+/* Result count */
+.dd-roster-result-count {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: var(--text-secondary, #6b7280);
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  background: var(--bg-secondary, #f9fafb);
+}
+
+/* Table wrapper */
+.dd-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Table */
+.dd-roster-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 580px;
+}
+
+/* Sortable header */
+.dd-roster-th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #6b7280);
+  background: var(--bg-secondary, #f9fafb);
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.dd-roster-th:hover {
+  background: var(--bg-hover, #f3f4f6);
+  color: var(--text-primary, #374151);
+}
+
+.dd-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Table rows */
+.dd-roster-row {
+  transition: background 0.1s;
+}
+
+.dd-roster-row:not(:last-child) td {
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+
+.dd-roster-row:hover td {
+  background: var(--bg-secondary, #f9fafb);
+}
+
+.dd-roster-td {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text-primary, #111827);
+  vertical-align: middle;
+}
+
+/* Empty row */
+.dd-roster-empty-row {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-secondary, #9ca3af);
+  font-size: 14px;
+}
+
+/* Seat badge */
+.dd-seat-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--bg-secondary, #f9fafb);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #374151);
+}
+
+/* Student name cell */
+.dd-student-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dd-student-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent-soft, #ede9fe);
+  color: var(--accent, #6d28d9);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+.dd-student-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-primary, #111827);
+}
+
+/* Phone cell */
+.dd-phone-cell {
+  font-size: 13px;
+  font-family: monospace;
+  color: var(--text-secondary, #6b7280);
+  white-space: nowrap;
+}
+
+/* Stop pill */
+.dd-stop-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Branch tag */
+.dd-branch-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
 /* ═══════════════════════════════════
    RESPONSIVE TWEAKS
 ═══════════════════════════════════ */

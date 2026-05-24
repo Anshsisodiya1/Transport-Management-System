@@ -12,68 +12,113 @@ exports.startTrip = async (req, res) => {
     }).populate("bus");
 
     if (!assignment) {
-      return res.status(400).json({ message: "No bus assigned" });
+      return res.status(400).json({
+        message: "No bus assigned",
+      });
     }
 
     const trip = await Trip.create({
       driver: driverId,
       bus: assignment.bus._id,
       route: assignment.bus.route,
-      status: "ongoing",
+
+      // SAME AS server.js
+      active: true,
+
+      currentLocation: {
+        lat: 0,
+        lng: 0,
+      },
+
       startTime: new Date(),
     });
 
-    res.json({ success: true, trip });
+    res.json({
+      success: true,
+      trip,
+    });
 
   } catch (err) {
-    res.status(500).json({ message: "Start trip failed" });
+    console.log(err);
+
+    res.status(500).json({
+      message: "Start trip failed",
+    });
   }
 };
 
-//  END TRIP
+// END TRIP
 exports.endTrip = async (req, res) => {
   try {
     const driverId = req.user._id;
 
     const trip = await Trip.findOne({
       driver: driverId,
-      status: "ongoing",
+      active: true,
     });
 
     if (!trip) {
-      return res.status(400).json({ message: "No active trip" });
+      return res.status(400).json({
+        message: "No active trip",
+      });
     }
 
-    trip.status = "completed";
+    // SAME AS server.js
+    trip.active = false;
+
     trip.endTime = new Date();
+
     await trip.save();
 
-    res.json({ success: true });
+    res.json({
+      success: true,
+    });
 
   } catch (err) {
-    res.status(500).json({ message: "End trip failed" });
+    console.log(err);
+
+    res.status(500).json({
+      message: "End trip failed",
+    });
   }
 };
 
-// OPTIONAL (fallback API)
+// UPDATE LOCATION
 exports.updateLocation = async (req, res) => {
   try {
-    const { lat, lng } = req.body;
+
+    // SAME AS DriverDashboard.jsx
+    const { latitude, longitude } = req.body;
+
     const driverId = req.user._id;
 
     const trip = await Trip.findOne({
       driver: driverId,
-      status: "ongoing",
+      active: true,
     });
 
-    if (!trip) return res.status(400).json({ message: "Trip not started" });
+    if (!trip) {
+      return res.status(400).json({
+        message: "Trip not started",
+      });
+    }
 
-    trip.currentLocation = { lat, lng };
+    trip.currentLocation = {
+      lat: latitude,
+      lng: longitude,
+    };
+
     await trip.save();
 
-    res.json({ success: true });
+    res.json({
+      success: true,
+    });
 
   } catch (err) {
-    res.status(500).json({ message: "Location update failed" });
+    console.log(err);
+
+    res.status(500).json({
+      message: "Location update failed",
+    });
   }
 };

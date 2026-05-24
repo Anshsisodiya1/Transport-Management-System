@@ -6,10 +6,11 @@ const Student = require("../models/Student");
 const Driver = require("../models/Driver");
 const Bus = require("../models/Bus");
 const Assignment = require("../models/Assignment");
+const Trip = require("../models/Trip"); // needed for getLiveBuses
 
-const sendEmail = require("../config/email"); // FIXED IMPORT
+const sendEmail = require("../config/email");
 
-//  Helper
+// Helper
 const generatePassword = () => {
   return Math.random().toString(36).slice(-8);
 };
@@ -46,7 +47,6 @@ exports.registerStudent = async (req, res) => {
       stopName,
     });
 
-    //  SEND EMAIL (FIXED)
     await sendEmail({
       to: email,
       name,
@@ -57,12 +57,8 @@ exports.registerStudent = async (req, res) => {
 
     res.status(201).json({
       message: "Student registered successfully",
-      credentials: {
-        email,
-        password: plainPassword,
-      },
+      credentials: { email, password: plainPassword },
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
@@ -104,7 +100,6 @@ exports.registerDriver = async (req, res) => {
       aadharNumber,
     });
 
-    //  SEND EMAIL (FIXED)
     await sendEmail({
       to: email,
       name,
@@ -115,12 +110,8 @@ exports.registerDriver = async (req, res) => {
 
     res.status(201).json({
       message: "Driver registered successfully",
-      credentials: {
-        email,
-        password: plainPassword,
-      },
+      credentials: { email, password: plainPassword },
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
@@ -133,10 +124,7 @@ exports.getAdminStats = async (req, res) => {
     const totalStudents = await Student.countDocuments();
     const totalDrivers = await Driver.countDocuments();
     const totalUsers = totalStudents + totalDrivers;
-
     const totalBuses = await Bus.countDocuments();
-
-    //  FIX
     const totalAssignments = await Assignment.countDocuments();
 
     res.json({
@@ -146,13 +134,12 @@ exports.getAdminStats = async (req, res) => {
       buses: totalBuses,
       assignments: totalAssignments,
     });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// get students
+// Get all students
 exports.getStudents = async (req, res) => {
   try {
     const students = await Student.find().populate("user");
@@ -162,12 +149,70 @@ exports.getStudents = async (req, res) => {
   }
 };
 
-// get drivers
+// Get all drivers
 exports.getDrivers = async (req, res) => {
   try {
     const drivers = await Driver.find().populate("user");
     res.json(drivers);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// GET /api/admin/live-buses
+// Returns all buses with active trip status, driver info, and last known GPS location.
+// Called once on admin live-tracking page mount — socket takes over after that.
+exports.getLiveBuses = async (req, res) => {
+  try {
+    const buses = await Bus.find().lean();
+
+    const results = await Promise.all(
+      buses.map(async (bus) => {
+        const trip = await Trip.findOne({ bus: bus._id, active: true }).lean();
+
+        const driverAssignment = await Assignment.findOne({
+          bus: bus._id,
+          type: "driver",
+        })
+          .populate("driver", "name phone contact email")
+          .lean();
+
+        return {
+          busId: String(bus._id),
+          busNumber: bus.busNumber,
+          active: !!trip,
+          location:
+            trip &&
+            trip.currentLocation?.lat != null &&
+            trip.currentLocation?.lng != null &&
+            !(trip.currentLocation.lat === 0 && trip.currentLocation.lng === 0)
+              ? { lat: trip.currentLocation.lat, lng: trip.currentLocation.lng }
+              : null,
+          driver: driverAssignment?.driver || null,
+          startTime: trip?.startTime || null,
+        };
+      })
+    );
+
+    res.json(results);
+  } catch (err) {
+    console.error("getLiveBuses error:", err.message);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// gat bus history - last 30 trips with driver info
+exports.getBusHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const trips = await Trip.find({ bus: id })
+      .populate("driver", "name phone email")
+      .sort({ startTime: -1 })
+      .limit(30)
+      .lean();
+    res.json(trips);
+  } catch (err) {
+    console.error("getBusHistory error:", err.message);
+    res.status(500).json({ message: "Server Error" });
   }
 };

@@ -4,58 +4,36 @@ const router = express.Router();
 const verifyToken = require("../middleware/authMiddleware");
 const checkRole = require("../middleware/roleMiddleware");
 
-const {
-  getStudentDashboard,
-} = require("../controllers/studentController");
-
-// ── Models (needed for active-trip check) ──
+const { getStudentDashboard } = require("../controllers/studentController");
 const Trip = require("../models/Trip");
-const Assignment = require("../models/Assignment");
 
-// 🎓 Student Dashboard
-router.get(
-  "/dashboard",
-  verifyToken,
-  checkRole("student"),
-  getStudentDashboard
-);
+// Student dashboard
+router.get("/dashboard", verifyToken, checkRole("student"), getStudentDashboard);
 
-// 🚌 Active Trip Check
-// Called on student dashboard mount to detect if a trip is already in progress
-router.get(
-  "/active-trip",
-  verifyToken,
-  checkRole("student"),
-  async (req, res) => {
-    try {
-      // Find this student's bus via their assignment
-      const assignment = await Assignment.findOne({ student: req.user.id })
-        .populate("bus");
+// Active trip check — called on student dashboard mount for page-refresh recovery
+router.get("/active-trip/:busId", verifyToken, checkRole("student"), async (req, res) => {
+  try {
+    const { busId } = req.params;
 
-      if (!assignment || !assignment.bus) {
-        return res.json({ active: false, location: null });
-      }
+    // FIX: your server.js and tripController both use { active: true }
+    // NOT { status: "ongoing" } — that field doesn't exist in your Trip model
+    const trip = await Trip.findOne({ bus: busId, active: true });
 
-      // Check if an ongoing trip exists for that bus
-      const trip = await Trip.findOne({
-        bus: assignment.bus._id,
-        status: "ongoing",
-      });
-
-      if (!trip) {
-        return res.json({ active: false, location: null });
-      }
-
-      return res.json({
-        active: true,
-        location: trip.currentLocation || null, // { lat, lng }
-      });
-
-    } catch (err) {
-      console.error("❌ active-trip error:", err.message);
-      res.status(500).json({ active: false, location: null });
+    if (!trip) {
+      return res.json({ active: false, location: null });
     }
+
+    return res.json({
+      active: true,
+      location: {
+        lat: trip.currentLocation?.lat || null,
+        lng: trip.currentLocation?.lng || null,
+      },
+    });
+  } catch (err) {
+    console.error("❌ active-trip error:", err.message);
+    res.status(500).json({ active: false, location: null });
   }
-);
+});
 
 module.exports = router;

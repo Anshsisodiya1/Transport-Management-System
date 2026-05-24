@@ -44,6 +44,25 @@ const Icon = {
       <circle cx="12" cy="10" r="3"/>
     </svg>
   ),
+  Routes: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12h18"/>
+      <path d="M3 6c0 0 4 0 6 3s6 3 6 3"/>
+      <path d="M3 18c0 0 4 0 6-3s6-3 6-3"/>
+      <circle cx="21" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+      <circle cx="3" cy="6" r="1.5" fill="currentColor" stroke="none"/>
+      <circle cx="3" cy="18" r="1.5" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
+  Reports: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="8" y1="13" x2="16" y2="13"/>
+      <line x1="8" y1="17" x2="16" y2="17"/>
+      <line x1="8" y1="9" x2="10" y2="9"/>
+    </svg>
+  ),
   Settings: () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="3"/>
@@ -99,12 +118,14 @@ const Icon = {
   ),
 };
 
-// ── Nav items ─────────────────────────────────────────────────
+// ── Nav items — fully synced with dashboard cards ─────────────
 const NAV = [
   { id: "dashboard",   label: "Dashboard",    icon: Icon.Dashboard,   path: "/admin-dashboard" },
+  { id: "routes",      label: "Routes",        icon: Icon.Routes,      path: "/admin/routes" },
   { id: "buses",       label: "Buses",         icon: Icon.Buses,       path: "/admin/buses" },
   { id: "register",    label: "Register User", icon: Icon.Register,    path: "/admin/register" },
   { id: "assignments", label: "Assignments",   icon: Icon.Assignments, path: "/admin/assignments" },
+  { id: "reports",     label: "Reports",       icon: Icon.Reports,     path: "/admin/reports" },
   { id: "settings",    label: "Settings",      icon: Icon.Settings,    path: "/admin/settings" },
 ];
 
@@ -133,19 +154,15 @@ function getAdminInfo() {
 }
 
 function getInitials(name = "") {
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "A";
+  return (
+    name.trim().split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "A"
+  );
 }
 
 // ── Component ─────────────────────────────────────────────────
 export default function Sidebar() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
 
   const [collapsed,   setCollapsed]   = useState(() => localStorage.getItem("sb_collapsed") === "true");
   const [dark,        setDark]        = useState(() => localStorage.getItem("sb_dark") === "true");
@@ -192,22 +209,19 @@ export default function Sidebar() {
         >
           <button
             className="asb__collapse-btn"
-            onClick={() => { setCollapsed(c => !c); setTooltip(null); }}
+            onClick={() => { setCollapsed((c) => !c); setTooltip(null); }}
             aria-label="Toggle sidebar"
           >
             <Icon.PanelLeft />
           </button>
           {tooltip === "__toggle" && (
-            <span className="asb__tooltip">
-              {collapsed ? "Expand" : "Collapse"}
-            </span>
+            <span className="asb__tooltip">{collapsed ? "Expand" : "Collapse"}</span>
           )}
         </div>
       </div>
 
       <div className="asb__rule" />
 
-      {/* ─── NAV GROUP LABEL ─── */}
       {!collapsed && <span className="asb__group-label">Main Menu</span>}
 
       {/* ─── NAV ITEMS ─── */}
@@ -239,9 +253,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* ─── SPACER ─── */}
       <div className="asb__flex-gap" />
-
       <div className="asb__rule" />
 
       {/* ─── PROFILE ─── */}
@@ -253,7 +265,7 @@ export default function Sidebar() {
       >
         <button
           className={`asb__profile-btn ${profileOpen ? "asb__profile-btn--open" : ""}`}
-          onClick={() => setProfileOpen(o => !o)}
+          onClick={() => setProfileOpen((o) => !o)}
           aria-label="Profile menu"
         >
           <span className="asb__avatar">{initials}</span>
@@ -270,10 +282,8 @@ export default function Sidebar() {
           <span className="asb__tooltip">{admin.name}</span>
         )}
 
-        {/* ── Popover ── */}
         {profileOpen && (
           <div className="asb__popover">
-
             <div className="asb__popover-head">
               <span className="asb__popover-avatar">{initials}</span>
               <div className="asb__popover-info">
@@ -297,7 +307,7 @@ export default function Sidebar() {
 
             <button
               className="asb__popover-row asb__popover-row--btn"
-              onClick={() => setDark(d => !d)}
+              onClick={() => setDark((d) => !d)}
             >
               <span className="asb__popover-row-icon">
                 {dark ? <Icon.Sun /> : <Icon.Moon />}
@@ -319,7 +329,6 @@ export default function Sidebar() {
               <span className="asb__popover-row-icon"><Icon.Logout /></span>
               <span className="asb__popover-row-text">Log out</span>
             </button>
-
           </div>
         )}
       </div>

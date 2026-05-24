@@ -66,3 +66,64 @@ exports.getDriverData = async (req, res) => {
     });
   }
 };
+
+
+// Get all students assigned to the driver's route
+
+const Student = require("../models/Student");
+
+exports.getBusStudents = async (req, res) => {
+  try {
+    const driverId = req.user.id;
+
+    // Step 1: find driver's bus
+    const driverAssignment = await Assignment.findOne({
+      driver: driverId,
+      type: "driver",
+    });
+
+    if (!driverAssignment) {
+      return res.status(404).json({
+        success: false,
+        message: "No bus assigned to driver",
+      });
+    }
+
+    // Step 2: fetch students in same bus
+    const studentAssignments = await Assignment.find({
+      bus: driverAssignment.bus,
+      type: "student",
+    })
+      .populate("student", "name phone")
+      .sort({ seatNumber: 1 });
+
+    // Step 3: branch fetch from Student model
+    const formattedStudents = await Promise.all(
+      studentAssignments.map(async (assign) => {
+        const studentData = await Student.findOne({
+          user: assign.student._id,
+        });
+
+        return {
+          _id: assign._id,
+          name: assign.student?.name,
+          phone: assign.student?.phone,
+          seatNumber: assign.seatNumber,
+          stopName: assign.stopName,
+          branch: studentData?.branch || "-",
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      totalStudents: formattedStudents.length,
+      students: formattedStudents,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};

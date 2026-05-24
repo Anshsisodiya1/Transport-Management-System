@@ -14,7 +14,7 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // ✅ Role validation
+    //  Role validation
     if (!role) {
       return alert("Please select role");
     }
@@ -31,12 +31,12 @@ function Login() {
 
       const { token, role: userRole, user } = res.data;
 
-      // ✅ Save full user data
+      //  Save full user data
       login(token, { ...user, role: userRole });
 
       alert("Login Successful");
 
-      // 🔀 Redirect based on role
+      //  Redirect based on role
       if (userRole === "admin") {
         navigate("/admin-dashboard", { replace: true });
       } else if (userRole === "driver") {

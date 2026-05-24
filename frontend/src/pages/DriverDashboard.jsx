@@ -2,38 +2,29 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-
-// React Icons
 import {
-  FaBus,
-  FaRoute,
-  FaUserCircle,
-  FaSignOutAlt,
-  FaMapMarkerAlt,
-  FaClock,
-  FaIdCard,
-  FaPhone,
-  FaEnvelope,
-  FaTachometerAlt,
+  FaBus, FaRoute, FaUserCircle, FaSignOutAlt,
+  FaMapMarkerAlt, FaClock, FaIdCard, FaPhone, FaEnvelope, FaTachometerAlt,
+  FaSort, FaSortUp, FaSortDown, FaUsers, FaSearch,
 } from "react-icons/fa";
-import {
-  MdNavigation,
-  MdGpsFixed,
-  MdGpsOff,
-  MdAssignment,
-} from "react-icons/md";
-import {
-  IoCheckmarkCircle,
-  IoCloseCircle,
-  IoWifiOutline,
-} from "react-icons/io5";
+import { MdNavigation, MdGpsFixed, MdGpsOff, MdAssignment } from "react-icons/md";
+import { IoCheckmarkCircle, IoCloseCircle, IoWifiOutline } from "react-icons/io5";
 import { RiSteering2Fill } from "react-icons/ri";
 import { HiChevronDown, HiChevronUp } from "react-icons/hi";
 import { BiSolidBadgeCheck } from "react-icons/bi";
-
 import "../styles/driver-dashboard.css";
 
 const SERVER = "http://localhost:5000";
+
+// ── SortIcon lives OUTSIDE the component so React HMR never breaks it ──
+function SortIcon({ colKey, sortConfig }) {
+  if (sortConfig.key !== colKey) {
+    return <FaSort style={{ opacity: 0.3, fontSize: 11 }} />;
+  }
+  return sortConfig.direction === "asc"
+    ? <FaSortUp style={{ fontSize: 11, color: "var(--accent, #6366f1)" }} />
+    : <FaSortDown style={{ fontSize: 11, color: "var(--accent, #6366f1)" }} />;
+}
 
 function DriverDashboard() {
   const [data, setData] = useState(null);
@@ -41,21 +32,27 @@ function DriverDashboard() {
   const [tripStarted, setTripStarted] = useState(false);
   const [tripDuration, setTripDuration] = useState(0);
   const [coords, setCoords] = useState(null);
-  const [gpsStatus, setGpsStatus] = useState("idle"); // idle | active | error
+  const [gpsStatus, setGpsStatus] = useState("idle");
   const [socketConnected, setSocketConnected] = useState(false);
   const [stopsDone, setStopsDone] = useState([]);
   const [activeSection, setActiveSection] = useState("overview");
+  const [locationCount, setLocationCount] = useState(0);
+
+  // Student roster state
+  const [students, setStudents] = useState([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [studentsError, setStudentsError] = useState(null);
+  const [rosterQuery, setRosterQuery] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: "seatNumber", direction: "asc" });
 
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("driverToken");
 
-  // FIX: Use refs for socket and watchId so they are always stable
-  // (previously socket was in state which caused stale closure issues)
   const socketRef = useRef(null);
   const watchIdRef = useRef(null);
   const timerRef = useRef(null);
 
-  // ── Socket Init (useRef instead of useState to avoid stale closures) ──
+  // ── Socket init ──
   useEffect(() => {
     const s = io(SERVER, {
       transports: ["polling", "websocket"],
@@ -63,41 +60,45 @@ function DriverDashboard() {
       reconnectionAttempts: Infinity,
     });
     s.on("connect", () => {
-      console.log("✅ Driver socket connected");
+      console.log("Driver socket connected:", s.id);
       setSocketConnected(true);
     });
     s.on("disconnect", () => {
-      console.log("🔌 Driver socket disconnected");
+      console.log("Driver socket disconnected");
       setSocketConnected(false);
     });
     socketRef.current = s;
-
     return () => s.disconnect();
   }, []);
 
-  // ── Fetch Driver Data ──
+  // ── Fetch driver data ──
   useEffect(() => {
-    const fetchDriver = async () => {
-      try {
-        const res = await axios.get(`${SERVER}/api/driver/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log("Driver API Response:", res.data);
-        setData(res.data);
-      } catch (err) {
-        console.error("API Error:", err.message);
-      }
-    };
-    fetchDriver();
+    axios
+      .get(`${SERVER}/api/driver/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => setData(res.data))
+      .catch((err) => console.error("API Error:", err.message));
   }, [token]);
 
-  // ── Trip Timer ──
+  // ── Fetch students when roster tab opens (lazy, once) ──
+  useEffect(() => {
+    if (activeSection !== "students") return;
+    if (students.length > 0 || studentsLoading) return;
+    setStudentsLoading(true);
+    setStudentsError(null);
+    axios
+      .get(`${SERVER}/api/driver/students`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => setStudents(res.data.students || []))
+      .catch((err) => {
+        console.error("Students fetch error:", err.message);
+        setStudentsError("Failed to load student roster. Please try again.");
+      })
+      .finally(() => setStudentsLoading(false));
+  }, [activeSection]);
+
+  // ── Trip timer ──
   useEffect(() => {
     if (tripStarted) {
-      timerRef.current = setInterval(
-        () => setTripDuration((d) => d + 1),
-        1000
-      );
+      timerRef.current = setInterval(() => setTripDuration((d) => d + 1), 1000);
     } else {
       clearInterval(timerRef.current);
       setTripDuration(0);
@@ -105,7 +106,7 @@ function DriverDashboard() {
     return () => clearInterval(timerRef.current);
   }, [tripStarted]);
 
-  // ── Close profile on outside click ──
+  // ── Close profile dropdown on outside click ──
   useEffect(() => {
     const handler = (e) => {
       if (!e.target.closest(".dd-profile-wrap")) setOpenProfile(false);
@@ -122,87 +123,74 @@ function DriverDashboard() {
     };
   }, []);
 
-  const formatDuration = (s) => {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    return [h, m, sec].map((v) => String(v).padStart(2, "0")).join(":");
+  const formatDuration = (sec) => {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    return [h, m, s].map((v) => String(v).padStart(2, "0")).join(":");
   };
 
   const logout = () => {
-    // If trip is active, end it before logging out
-    if (tripStarted) {
+    if (tripStarted && data?.bus?._id) {
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
-      socketRef.current?.emit("endTrip", { driverId: data?.driver?._id });
+      socketRef.current?.emit("endTrip", {
+        busId: String(data.bus._id),
+        driverId: String(data.driver._id),
+      });
     }
-    localStorage.removeItem("token");
+    localStorage.removeItem("driverToken");
     localStorage.removeItem("role");
     navigate("/");
   };
 
-  const handleTripToggle = () => {
+  const handleTripToggle = async () => {
     const socket = socketRef.current;
-
     if (!socket || !socket.connected) {
-      alert("Socket not connected. Please wait a moment and try again.");
+      alert("Socket not connected. Please wait and try again.");
       return;
     }
-
     if (!data?.driver?._id || !data?.bus?._id) {
-      alert("Driver or bus data not loaded yet. Please wait.");
+      alert("Driver or bus data missing. Please refresh.");
       return;
     }
 
     if (!tripStarted) {
-      // ── START TRIP ──
-      if (!navigator.geolocation) {
-        alert("Geolocation is not supported by your browser.");
-        return;
-      }
-
       setTripStarted(true);
       setGpsStatus("active");
+      setLocationCount(0);
 
-      // FIX: Emit startTrip so students receive the tripStarted event
-      socket.emit("startTrip", {
-        driverId: data.driver._id,
-        busId: data.bus._id,
-      });
-      console.log("🟢 startTrip emitted for bus:", data.bus._id);
+      const busIdStr = String(data.bus._id);
+      const driverIdStr = String(data.driver._id);
+      const routeIdStr = data.route?._id ? String(data.route._id) : null;
 
-      // Start watching GPS position
-      const id = navigator.geolocation.watchPosition(
-        ({ coords: c }) => {
-          console.log("📍 Sending location:", c.latitude, c.longitude);
+      socket.emit("startTrip", { busId: busIdStr, driverId: driverIdStr, routeId: routeIdStr });
 
-          setCoords({
-            lat: c.latitude.toFixed(5),
-            lng: c.longitude.toFixed(5),
-          });
-
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCoords({ lat: latitude.toFixed(6), lng: longitude.toFixed(6) });
+          setLocationCount((c) => c + 1);
           socket.emit("sendLocation", {
-            driverId: data.driver._id,
-            busId: data.bus._id,
-            routeId: data.route?._id,
-            latitude: c.latitude,
-            longitude: c.longitude,
+            busId: busIdStr,
+            driverId: driverIdStr,
+            routeId: routeIdStr,
+            latitude,
+            longitude,
           });
         },
         (err) => {
-          console.warn("GPS error:", err.message);
+          console.warn("GPS error:", err.code, err.message);
           setGpsStatus("error");
         },
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
       );
-
-      watchIdRef.current = id;
-
+      watchIdRef.current = watchId;
     } else {
-      // ── END TRIP ──
       setTripStarted(false);
       setGpsStatus("idle");
       setCoords(null);
       setStopsDone([]);
+      setLocationCount(0);
 
       if (watchIdRef.current) {
         navigator.geolocation.clearWatch(watchIdRef.current);
@@ -210,31 +198,83 @@ function DriverDashboard() {
       }
 
       socket.emit("endTrip", {
-        driverId: data.driver._id,
+        busId: String(data.bus._id),
+        driverId: String(data.driver._id),
       });
-      console.log("🛑 endTrip emitted");
+
+      try {
+        await axios.post(
+          `${SERVER}/api/trip/end`,
+          { busId: data.bus._id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (err) {
+        console.error("Trip end DB error:", err.response?.data || err.message);
+      }
     }
   };
 
   const toggleStop = (stop) => {
     setStopsDone((prev) =>
-      prev.includes(stop) ? prev.filter((s) => s !== stop) : [...prev, stop]
+      prev.includes(stop) ? prev.filter((st) => st !== stop) : [...prev, stop]
     );
   };
 
+  // ── Roster helpers ──
+  const handleSort = (key) => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const filteredStudents = students
+    .filter((student) => {
+      const q = rosterQuery.toLowerCase();
+      if (!q) return true;
+      return (
+        student.name?.toLowerCase().includes(q) ||
+        student.stopName?.toLowerCase().includes(q) ||
+        student.branch?.toLowerCase().includes(q) ||
+        String(student.seatNumber ?? "").includes(q)
+      );
+    })
+    .sort((a, b) => {
+      const { key, direction } = sortConfig;
+      const valA = key === "seatNumber"
+        ? Number(a[key] ?? 0)
+        : (a[key] ?? "").toString().toLowerCase();
+      const valB = key === "seatNumber"
+        ? Number(b[key] ?? 0)
+        : (b[key] ?? "").toString().toLowerCase();
+      if (valA < valB) return direction === "asc" ? -1 : 1;
+      if (valA > valB) return direction === "asc" ? 1 : -1;
+      return 0;
+    });
+
+  const uniqueStops = [...new Set(students.map((st) => st.stopName).filter(Boolean))];
+
   const driver = data?.driver;
-  const bus = data?.bus;
-  const route = data?.route;
-  const stops = route?.stops || [];
+  const bus    = data?.bus;
+  const route  = data?.route;
+  const stops  = route?.stops || [];
 
   const navItems = [
-    { id: "overview", icon: <FaTachometerAlt />, label: "Overview" },
-    { id: "route",    icon: <FaRoute />,         label: "Route"    },
-    { id: "bus",      icon: <FaBus />,            label: "Bus"      },
-    { id: "profile",  icon: <FaUserCircle />,     label: "Profile"  },
+    { id: "overview",  icon: <FaTachometerAlt />, label: "Overview"  },
+    { id: "route",     icon: <FaRoute />,          label: "Route"     },
+    { id: "students",  icon: <FaUsers />,           label: "Students"  },
+    { id: "bus",       icon: <FaBus />,             label: "Bus"       },
+    { id: "profile",   icon: <FaUserCircle />,      label: "Profile"   },
   ];
 
-  // ── Loading ──
+  const TABLE_COLS = [
+    { key: "seatNumber", label: "Seat"    },
+    { key: "name",       label: "Student" },
+    { key: "phone",      label: "Phone"   },
+    { key: "stopName",   label: "Stop"    },
+    { key: "branch",     label: "Branch"  },
+  ];
+
   if (!data)
     return (
       <div className="dd-loading">
@@ -245,41 +285,28 @@ function DriverDashboard() {
 
   return (
     <div className="dd-root">
-      {/* ── TOP NAVBAR ── */}
+
+      {/* ── Navbar ── */}
       <header className="dd-navbar">
         <div className="dd-navbar-brand">
           <RiSteering2Fill className="dd-brand-icon" />
           <span>Driver Panel</span>
         </div>
-
         <div className="dd-navbar-right">
-          {/* Socket status */}
           <div className={`dd-socket-badge ${socketConnected ? "on" : "off"}`}>
             <IoWifiOutline />
             <span>{socketConnected ? "Live" : "Offline"}</span>
           </div>
-
-          {/* Profile dropdown */}
           <div className="dd-profile-wrap">
-            <button
-              className="dd-profile-btn"
-              onClick={() => setOpenProfile((p) => !p)}
-            >
-              <div className="dd-avatar">
-                {driver?.name?.[0]?.toUpperCase() || "D"}
-              </div>
-              <span className="dd-profile-name">
-                {driver?.name || "Driver"}
-              </span>
+            <button className="dd-profile-btn" onClick={() => setOpenProfile((p) => !p)}>
+              <div className="dd-avatar">{driver?.name?.[0]?.toUpperCase() || "D"}</div>
+              <span className="dd-profile-name">{driver?.name || "Driver"}</span>
               {openProfile ? <HiChevronUp /> : <HiChevronDown />}
             </button>
-
             {openProfile && (
               <div className="dd-dropdown">
                 <div className="dd-dropdown-head">
-                  <div className="dd-dropdown-avatar">
-                    {driver?.name?.[0]?.toUpperCase() || "D"}
-                  </div>
+                  <div className="dd-dropdown-avatar">{driver?.name?.[0]?.toUpperCase() || "D"}</div>
                   <div>
                     <div className="dd-dropdown-name">{driver?.name}</div>
                     <div className="dd-dropdown-role">Bus Driver</div>
@@ -299,7 +326,7 @@ function DriverDashboard() {
         </div>
       </header>
 
-      {/* ── TRIP HERO BANNER ── */}
+      {/* ── Trip Banner ── */}
       <div className={`dd-trip-banner ${tripStarted ? "active" : ""}`}>
         <div className="dd-trip-banner-inner">
           <div className="dd-trip-info">
@@ -309,18 +336,18 @@ function DriverDashboard() {
                 {tripStarted ? "Live Trip in Progress" : "Ready to Start"}
               </div>
               {tripStarted && (
-                <div className="dd-trip-timer">
-                  {formatDuration(tripDuration)}
-                </div>
+                <div className="dd-trip-timer">{formatDuration(tripDuration)}</div>
               )}
               {coords && (
                 <div className="dd-coords">
                   <MdGpsFixed /> {coords.lat}, {coords.lng}
+                  {locationCount > 0 && (
+                    <span style={{ marginLeft: 6, opacity: 0.7 }}>#{locationCount}</span>
+                  )}
                 </div>
               )}
             </div>
           </div>
-
           <button
             className={`dd-trip-btn ${tripStarted ? "end" : "start"}`}
             onClick={handleTripToggle}
@@ -333,15 +360,9 @@ function DriverDashboard() {
                 : ""
             }
           >
-            {tripStarted ? (
-              <>End Trip</>
-            ) : (
-              <><MdNavigation /> Start Trip</>
-            )}
+            {tripStarted ? "End Trip" : <><MdNavigation /> Start Trip</>}
           </button>
         </div>
-
-        {/* Stop progress bar */}
         {tripStarted && stops.length > 0 && (
           <div className="dd-stop-progress">
             <div
@@ -352,9 +373,8 @@ function DriverDashboard() {
         )}
       </div>
 
-      {/* ── MAIN LAYOUT ── */}
+      {/* ── Layout ── */}
       <div className="dd-layout">
-        {/* Sidebar nav */}
         <nav className="dd-sidebar">
           {navItems.map((n) => (
             <button
@@ -362,13 +382,11 @@ function DriverDashboard() {
               className={`dd-nav-btn ${activeSection === n.id ? "active" : ""}`}
               onClick={() => setActiveSection(n.id)}
             >
-              {n.icon}
-              <span>{n.label}</span>
+              {n.icon}<span>{n.label}</span>
             </button>
           ))}
         </nav>
 
-        {/* Content */}
         <main className="dd-main">
 
           {/* ── OVERVIEW ── */}
@@ -377,7 +395,6 @@ function DriverDashboard() {
               <h2 className="dd-section-title">
                 Welcome back, {driver?.name?.split(" ")[0] || "Driver"} 👋
               </h2>
-
               <div className="dd-stat-grid">
                 <div className="dd-stat-card accent">
                   <div className="dd-stat-icon"><FaBus /></div>
@@ -386,17 +403,13 @@ function DriverDashboard() {
                     <div className="dd-stat-lbl">Assigned Bus</div>
                   </div>
                 </div>
-
                 <div className="dd-stat-card green">
                   <div className="dd-stat-icon"><MdAssignment /></div>
                   <div className="dd-stat-body">
-                    <div className="dd-stat-val">
-                      {data?.assigned ? "Active" : "None"}
-                    </div>
+                    <div className="dd-stat-val">{data?.assigned ? "Active" : "None"}</div>
                     <div className="dd-stat-lbl">Assignment</div>
                   </div>
                 </div>
-
                 <div className="dd-stat-card purple">
                   <div className="dd-stat-icon"><FaRoute /></div>
                   <div className="dd-stat-body">
@@ -404,7 +417,6 @@ function DriverDashboard() {
                     <div className="dd-stat-lbl">Route No.</div>
                   </div>
                 </div>
-
                 <div className="dd-stat-card orange">
                   <div className="dd-stat-icon"><FaMapMarkerAlt /></div>
                   <div className="dd-stat-body">
@@ -413,25 +425,17 @@ function DriverDashboard() {
                   </div>
                 </div>
               </div>
-
               <div className="dd-card">
-                <div className="dd-card-head">
-                  <BiSolidBadgeCheck /> Assignment Status
-                </div>
+                <div className="dd-card-head"><BiSolidBadgeCheck /> Assignment Status</div>
                 <div className="dd-assign-status">
                   <div className={`dd-assign-badge ${data?.assigned ? "yes" : "no"}`}>
-                    {data?.assigned ? (
-                      <><IoCheckmarkCircle /> Fully Assigned</>
-                    ) : (
-                      <><IoCloseCircle /> Not Assigned Yet</>
-                    )}
+                    {data?.assigned
+                      ? <><IoCheckmarkCircle /> Fully Assigned</>
+                      : <><IoCloseCircle /> Not Assigned Yet</>}
                   </div>
                   <div className="dd-assign-detail">
                     <span><b>Bus:</b> {bus?.busNumber || "—"}</span>
-                    <span>
-                      <b>Route:</b>{" "}
-                      {route ? `${route.routeNumber} – ${route.routeName}` : "—"}
-                    </span>
+                    <span><b>Route:</b> {route ? `${route.routeNumber} – ${route.routeName}` : "—"}</span>
                   </div>
                 </div>
               </div>
@@ -441,10 +445,7 @@ function DriverDashboard() {
           {/* ── ROUTE ── */}
           {activeSection === "route" && (
             <div className="dd-section">
-              <h2 className="dd-section-title">
-                <FaRoute /> Route Info
-              </h2>
-
+              <h2 className="dd-section-title"><FaRoute /> Route Info</h2>
               {route ? (
                 <>
                   <div className="dd-card">
@@ -459,7 +460,6 @@ function DriverDashboard() {
                       </div>
                     </div>
                   </div>
-
                   <div className="dd-card">
                     <div className="dd-card-head">
                       <FaMapMarkerAlt /> Stops
@@ -470,40 +470,33 @@ function DriverDashboard() {
                       )}
                     </div>
                     <div className="dd-stops-list">
-                      {stops.map((s, i) => (
+                      {stops.map((stop, i) => (
                         <div
                           key={i}
-                          className={`dd-stop-item ${stopsDone.includes(s) ? "done" : ""}`}
-                          onClick={() => tripStarted && toggleStop(s)}
+                          className={`dd-stop-item ${stopsDone.includes(stop) ? "done" : ""}`}
+                          onClick={() => tripStarted && toggleStop(stop)}
                           style={{ cursor: tripStarted ? "pointer" : "default" }}
                         >
                           <div className="dd-stop-dot">
-                            {stopsDone.includes(s) ? (
-                              <IoCheckmarkCircle />
-                            ) : (
-                              <span>{i + 1}</span>
-                            )}
+                            {stopsDone.includes(stop)
+                              ? <IoCheckmarkCircle />
+                              : <span>{i + 1}</span>}
                           </div>
                           <span className="dd-stop-name">
-                            {typeof s === "string" ? s : s.name || s.stopName}
+                            {typeof stop === "string" ? stop : stop.name || stop.stopName}
                           </span>
-                          {tripStarted && !stopsDone.includes(s) && (
+                          {tripStarted && !stopsDone.includes(stop) && (
                             <span className="dd-stop-tap">tap to mark</span>
                           )}
                         </div>
                       ))}
                     </div>
                   </div>
-
                   <div className="dd-card">
-                    <div className="dd-card-head">
-                      <FaClock /> Timings
-                    </div>
+                    <div className="dd-card-head"><FaClock /> Timings</div>
                     <div className="dd-timings-grid">
                       {route.timings?.map((t, i) => (
-                        <div className="dd-timing-chip" key={i}>
-                          <FaClock /> {t}
-                        </div>
+                        <div className="dd-timing-chip" key={i}><FaClock /> {t}</div>
                       ))}
                     </div>
                   </div>
@@ -512,8 +505,166 @@ function DriverDashboard() {
                 <div className="dd-empty-state">
                   <FaRoute />
                   <p>No route assigned yet</p>
-                  <span>Contact your administrator to get a route assigned</span>
+                  <span>Contact your administrator</span>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* ── STUDENTS ── */}
+          {activeSection === "students" && (
+            <div className="dd-section">
+              <h2 className="dd-section-title"><FaUsers /> Student Roster</h2>
+
+              {!data?.assigned ? (
+                <div className="dd-empty-state">
+                  <FaUsers />
+                  <p>No bus assigned</p>
+                  <span>You need a bus assignment to view the roster</span>
+                </div>
+              ) : studentsLoading ? (
+                <div className="dd-loading" style={{ minHeight: 200 }}>
+                  <div className="dd-spinner" />
+                  <span>Loading roster…</span>
+                </div>
+              ) : studentsError ? (
+                <div className="dd-empty-state">
+                  <FaUsers />
+                  <p>Failed to load</p>
+                  <span>{studentsError}</span>
+                  <button
+                    className="dd-logout-card-btn"
+                    style={{ marginTop: 12 }}
+                    onClick={() => {
+                      setStudents([]);
+                      setStudentsError(null);
+                      setStudentsLoading(false);
+                    }}
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Summary bar */}
+                  <div className="dd-roster-summary">
+                    <div className="dd-roster-summary-item">
+                      <FaUsers />
+                      <span><strong>{students.length}</strong> students</span>
+                    </div>
+                    <div className="dd-roster-summary-item">
+                      <FaMapMarkerAlt />
+                      <span><strong>{uniqueStops.length}</strong> stops</span>
+                    </div>
+                    <div className="dd-roster-summary-item">
+                      <FaBus />
+                      <span>Bus <strong>{bus?.busNumber || "—"}</strong></span>
+                    </div>
+                  </div>
+
+                  <div className="dd-card">
+                    {/* Search */}
+                    <div className="dd-roster-search-bar">
+                      <FaSearch className="dd-search-icon" />
+                      <input
+                        type="text"
+                        className="dd-roster-input"
+                        placeholder="Search by name, stop, branch, or seat…"
+                        value={rosterQuery}
+                        onChange={(e) => setRosterQuery(e.target.value)}
+                      />
+                      {rosterQuery && (
+                        <button
+                          className="dd-search-clear"
+                          onClick={() => setRosterQuery("")}
+                          aria-label="Clear search"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Result count */}
+                    {rosterQuery && (
+                      <div className="dd-roster-result-count">
+                        Showing {filteredStudents.length} of {students.length} students
+                      </div>
+                    )}
+
+                    {/* Table */}
+                    <div className="dd-table-wrap">
+                      <table className="dd-roster-table">
+                        <thead>
+                          <tr>
+                            {TABLE_COLS.map((col) => (
+                              <th
+                                key={col.key}
+                                className="dd-roster-th"
+                                onClick={() => handleSort(col.key)}
+                              >
+                                <span className="dd-th-inner">
+                                  {col.label}
+                                  <SortIcon colKey={col.key} sortConfig={sortConfig} />
+                                </span>
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredStudents.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="dd-roster-empty-row">
+                                <FaSearch style={{ marginRight: 6, opacity: 0.4 }} />
+                                No students match your search
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredStudents.map((student, idx) => {
+                              const initials = (student.name || "?")
+                                .split(" ")
+                                .map((w) => w[0])
+                                .join("")
+                                .slice(0, 2)
+                                .toUpperCase();
+                              return (
+                                <tr key={student._id || idx} className="dd-roster-row">
+                                  <td className="dd-roster-td">
+                                    <span className="dd-seat-badge">
+                                      {student.seatNumber ?? "—"}
+                                    </span>
+                                  </td>
+                                  <td className="dd-roster-td">
+                                    <div className="dd-student-cell">
+                                      <div className="dd-student-avatar">{initials}</div>
+                                      <span className="dd-student-name">
+                                        {student.name || "—"}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="dd-roster-td dd-phone-cell">
+                                    <FaPhone style={{ fontSize: 10, marginRight: 5, opacity: 0.5 }} />
+                                    {student.phone || "—"}
+                                  </td>
+                                  <td className="dd-roster-td">
+                                    <span className="dd-stop-pill">
+                                      <FaMapMarkerAlt style={{ fontSize: 10 }} />
+                                      {student.stopName || "—"}
+                                    </span>
+                                  </td>
+                                  <td className="dd-roster-td">
+                                    <span className="dd-branch-tag">
+                                      {student.branch || "—"}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -521,10 +672,7 @@ function DriverDashboard() {
           {/* ── BUS ── */}
           {activeSection === "bus" && (
             <div className="dd-section">
-              <h2 className="dd-section-title">
-                <FaBus /> Bus Info
-              </h2>
-
+              <h2 className="dd-section-title"><FaBus /> Bus Info</h2>
               {data?.assigned ? (
                 <div className="dd-card">
                   <div className="dd-card-head">Assigned Bus</div>
@@ -549,7 +697,7 @@ function DriverDashboard() {
                       <span className="dd-key">GPS Status</span>
                       <span className={`dd-val gps-${gpsStatus}`}>
                         {gpsStatus === "active" ? (
-                          <><MdGpsFixed /> Active</>
+                          <><MdGpsFixed /> Active ({locationCount} updates sent)</>
                         ) : gpsStatus === "error" ? (
                           <><MdGpsOff /> Error</>
                         ) : (
@@ -563,6 +711,14 @@ function DriverDashboard() {
                         {tripStarted ? "🟢 In Progress" : "⚪ Not Started"}
                       </span>
                     </div>
+                    {coords && (
+                      <div className="dd-kv">
+                        <span className="dd-key">Current GPS</span>
+                        <span className="dd-val" style={{ fontFamily: "monospace", fontSize: 12 }}>
+                          {coords.lat}, {coords.lng}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -578,10 +734,7 @@ function DriverDashboard() {
           {/* ── PROFILE ── */}
           {activeSection === "profile" && (
             <div className="dd-section">
-              <h2 className="dd-section-title">
-                <FaUserCircle /> My Profile
-              </h2>
-
+              <h2 className="dd-section-title"><FaUserCircle /> My Profile</h2>
               <div className="dd-card">
                 <div className="dd-profile-card-head">
                   <div className="dd-profile-avatar-lg">
@@ -611,7 +764,6 @@ function DriverDashboard() {
                   </div>
                 </div>
               </div>
-
               <button className="dd-logout-card-btn" onClick={logout}>
                 <FaSignOutAlt /> Sign Out
               </button>
@@ -621,7 +773,7 @@ function DriverDashboard() {
         </main>
       </div>
 
-      {/* ── BOTTOM NAV (mobile) ── */}
+      {/* ── Bottom Nav (mobile) ── */}
       <nav className="dd-bottom-nav">
         {navItems.map((n) => (
           <button
@@ -629,11 +781,11 @@ function DriverDashboard() {
             className={`dd-bottom-btn ${activeSection === n.id ? "active" : ""}`}
             onClick={() => setActiveSection(n.id)}
           >
-            {n.icon}
-            <span>{n.label}</span>
+            {n.icon}<span>{n.label}</span>
           </button>
         ))}
       </nav>
+
     </div>
   );
 }

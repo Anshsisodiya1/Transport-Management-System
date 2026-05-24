@@ -21,6 +21,7 @@ import BusSeatLayout from "./components/BusSeatLayout";
 import Reports from "./pages/Reports";
 import DriverDashboard from "./pages/DriverDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
+import LiveFleetMap from "./pages/LiveFleetMap";
 import "leaflet/dist/leaflet.css";
 function App() {
   const [notification, setNotification] = useState(null);
@@ -117,6 +118,15 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <Reports />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/live-fleet-map"
+            element={
+              <ProtectedRoute role="admin">
+                <LiveFleetMap />
               </ProtectedRoute>
             }
           />

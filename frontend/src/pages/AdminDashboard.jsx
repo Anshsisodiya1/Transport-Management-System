@@ -19,6 +19,9 @@ import {
   RiShieldCheckLine,
   RiCalendarCheckLine,
   RiArrowUpLine,
+  RiUserAddLine,
+  RiSettings4Line,
+  RiMapLine,
 } from "react-icons/ri";
 
 /* ─── tiny helpers ──────────────────────────────────────── */
@@ -72,6 +75,7 @@ const statConfig = [
   },
 ];
 
+// ── All action cards — fully synced with sidebar NAV ──────────
 const actionCards = [
   {
     key: "routes",
@@ -92,6 +96,24 @@ const actionCards = [
     path: "/admin/buses",
   },
   {
+    key: "register",
+    className: "register",
+    icon: <RiUserAddLine />,
+    title: "Register User",
+    desc: "Onboard new drivers and students into the transport management system.",
+    chip: "Users",
+    path: "/admin/register",
+  },
+  {
+    key: "assignments",
+    className: "assignments",
+    icon: <RiMapPinLine />,
+    title: "Assignments",
+    desc: "Assign drivers and students to buses, routes and designated stops.",
+    chip: "Assign",
+    path: "/admin/assignments",
+  },
+  {
     key: "reports",
     className: "reports",
     icon: <RiBarChartBoxLine />,
@@ -99,6 +121,24 @@ const actionCards = [
     desc: "Generate ridership, route efficiency & compliance reports with exports.",
     chip: "Analytics",
     path: "/admin/reports",
+  },
+  {
+    key: "live-fleet",
+    className: "live-fleet",
+    icon: <RiMapLine />, // import RiMapLine from react-icons/ri
+    title: "Live Fleet Monitor",
+    desc: "Track all buses in real-time on a live map. View driver info, GPS location and trip status.",
+    chip: "Live",
+    path: "/admin/live-fleet-map",
+  },
+  {
+    key: "settings",
+    className: "settings",
+    icon: <RiSettings4Line />,
+    title: "Settings",
+    desc: "Configure system preferences, notifications and access permissions.",
+    chip: "Config",
+    path: "/admin/settings",
   },
 ];
 
@@ -163,7 +203,6 @@ function AdminDashboard() {
   return (
     <Layout>
       <div className="dashboard-container">
-
         {/* ── Header ── */}
         <div className="dashboard-header">
           <div className="header-left">
@@ -205,7 +244,9 @@ function AdminDashboard() {
             <div className="stat-card" key={s.key}>
               <div className="stat-card-top">
                 <div className={`stat-icon-wrap ${s.color}`}>{s.icon}</div>
-                <span className={`stat-trend ${s.trend.startsWith("+") ? "up" : "neutral"}`}>
+                <span
+                  className={`stat-trend ${s.trend.startsWith("+") ? "up" : "neutral"}`}
+                >
                   {s.trend.startsWith("+") && <RiArrowUpLine size={10} />}
                   {s.trend}
                 </span>
@@ -219,10 +260,7 @@ function AdminDashboard() {
               <div className="stat-bar">
                 <div
                   className="stat-bar-fill"
-                  style={{
-                    width: `${s.bar}%`,
-                    background: s.barColor,
-                  }}
+                  style={{ width: `${s.bar}%`, background: s.barColor }}
                 />
               </div>
             </div>
@@ -230,7 +268,9 @@ function AdminDashboard() {
         </div>
 
         {/* ── Quick actions ── */}
-        <div className="section-label" style={{ marginTop: 40 }}>Quick Actions</div>
+        <div className="section-label" style={{ marginTop: 40 }}>
+          Quick Actions
+        </div>
 
         <div className="actions-grid">
           {actionCards.map((card) => (
@@ -242,7 +282,7 @@ function AdminDashboard() {
               tabIndex={0}
               onKeyDown={(e) => e.key === "Enter" && navigate(card.path)}
             >
-              <div className={`action-icon-wrap`}>{card.icon}</div>
+              <div className="action-icon-wrap">{card.icon}</div>
 
               <div className="action-card-body">
                 <div className="action-card-title">{card.title}</div>
@@ -281,7 +321,6 @@ function AdminDashboard() {
             Session active
           </div>
         </div>
-
       </div>
     </Layout>
   );
