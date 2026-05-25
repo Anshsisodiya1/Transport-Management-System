@@ -1,0 +1,372 @@
+/* ═══════════════════════════════════════════════════════
+   Login.css  —  Centered Card · White Theme · Responsive
+   ═══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Page wrapper ──────────────────────────────────── */
+.lg-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f4f9;
+  padding: 24px 16px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+/* Subtle dot-grid background */
+.lg-bg {
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, #c8d5e8 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Card ──────────────────────────────────────────── */
+.lg-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 40px 36px 32px;
+  border: 1px solid rgba(15, 32, 68, 0.08);
+  box-shadow:
+    0 2px 4px rgba(15,32,68,0.04),
+    0 12px 40px rgba(15,32,68,0.10),
+    0 40px 80px rgba(15,32,68,0.06);
+  animation: lg-card-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes lg-card-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* ── Header ────────────────────────────────────────── */
+.lg-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0;
+}
+
+/* Logo ring */
+.lg-logo-ring {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: #0f2044;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow:
+    0 0 0 6px rgba(15,32,68,0.08),
+    0 8px 24px rgba(15,32,68,0.22);
+  animation: lg-logo-in 0.6s 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes lg-logo-in {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.lg-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+/* Title */
+.lg-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f2044;
+  letter-spacing: -0.2px;
+  margin-bottom: 5px;
+  animation: lg-fade-up 0.5s 0.2s both;
+}
+
+/* Subtitle */
+.lg-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  color: #7a8499;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  animation: lg-fade-up 0.5s 0.27s both;
+}
+
+/* Tagline */
+.lg-tagline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 300;
+  font-style: italic;
+  color: #9aa3b5;
+  animation: lg-fade-up 0.5s 0.33s both;
+}
+
+@keyframes lg-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Divider ───────────────────────────────────────── */
+.lg-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e2e6ef 20%, #e2e6ef 80%, transparent);
+  margin: 24px 0;
+  animation: lg-fade-up 0.5s 0.35s both;
+}
+
+/* ── Section label ─────────────────────────────────── */
+.lg-section { animation: lg-fade-up 0.5s 0.38s both; }
+
+.lg-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #9aa3b5;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* ── Role buttons ──────────────────────────────────── */
+.lg-role-row {
+  display: flex;
+  gap: 8px;
+}
+
+.lg-role-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 13px 8px 11px;
+  border-radius: 14px;
+  border: 1.5px solid #e2e6ef;
+  background: #f8f9fb;
+  color: #5a6478;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s, color 0.18s,
+              box-shadow 0.18s, transform 0.12s;
+}
+.lg-role-btn:hover {
+  border-color: #0f2044;
+  background: #f0f3fa;
+  color: #0f2044;
+  transform: translateY(-1px);
+}
+.lg-role-btn.active {
+  border-color: #0f2044;
+  background: #0f2044;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(15,32,68,0.25);
+  transform: translateY(-1px);
+}
+
+/* ── Form ──────────────────────────────────────────── */
+.lg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 20px;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition:
+    max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity    0.3s  ease,
+    margin-top 0.3s  ease;
+  pointer-events: none;
+}
+.lg-form.visible {
+  max-height: 500px;
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Field */
+.lg-field { display: flex; flex-direction: column; gap: 6px; }
+
+.lg-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #5a6478;
+}
+
+/* Input wrap */
+.lg-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.lg-input-icon {
+  position: absolute;
+  left: 13px;
+  color: #a0aab8;
+  pointer-events: none;
+  flex-shrink: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.lg-input {
+  width: 100%;
+  padding: 11px 40px 11px 38px;
+  border: 1.5px solid #e2e6ef;
+  border-radius: 11px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  color: #1a2340;
+  background: #f8f9fb;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+}
+.lg-input::placeholder { color: #b8c0ce; }
+.lg-input:focus {
+  border-color: #0f2044;
+  background: #ffffff;
+  box-shadow: 0 0 0 3.5px rgba(15,32,68,0.09);
+}
+
+/* Eye toggle */
+.lg-eye {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #a0aab8;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s;
+}
+.lg-eye:hover { color: #0f2044; }
+
+/* Error */
+.lg-error {
+  font-size: 12.5px;
+  color: #c0392b;
+  background: #fef0ef;
+  border: 1px solid #fad4d0;
+  border-radius: 9px;
+  padding: 9px 13px;
+  line-height: 1.5;
+}
+
+/* Submit button */
+.lg-submit {
+  margin-top: 4px;
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  border: none;
+  background: #0f2044;
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
+  box-shadow: 0 4px 16px rgba(15,32,68,0.24);
+}
+.lg-submit:hover:not(:disabled) {
+  background: #16305c;
+  transform: translateY(-1px);
+  box-shadow: 0 7px 22px rgba(15,32,68,0.3);
+}
+.lg-submit:active:not(:disabled) { transform: translateY(0); }
+.lg-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+
+/* Spinner inside button */
+.lg-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: lg-spin 0.7s linear infinite;
+}
+@keyframes lg-spin { to { transform: rotate(360deg); } }
+
+/* ── Hint ──────────────────────────────────────────── */
+.lg-hint {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 12.5px;
+  color: #b0b8cc;
+}
+
+/* ── Footer ────────────────────────────────────────── */
+.lg-footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 10.5px;
+  color: #c2c8d6;
+  letter-spacing: 0.2px;
+  border-top: 1px solid #f0f2f7;
+  padding-top: 18px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════ */
+
+/* Tablets & small laptops */
+@media (max-width: 520px) {
+  .lg-card {
+    padding: 32px 24px 28px;
+    border-radius: 20px;
+  }
+  .lg-logo-ring { width: 76px; height: 76px; }
+  .lg-logo      { width: 44px; height: 44px; }
+  .lg-title     { font-size: 20px; }
+}
+
+/* Phones */
+@media (max-width: 380px) {
+  .lg-card  { padding: 28px 18px 24px; border-radius: 18px; }
+  .lg-title { font-size: 18px; }
+
+  .lg-role-row  { gap: 6px; }
+  .lg-role-btn  { padding: 11px 4px 9px; font-size: 11px; gap: 5px; }
+
+  .lg-input     { font-size: 13px; padding: 10px 38px 10px 36px; }
+  .lg-submit    { font-size: 13.5px; padding: 12px; }
+}
+
+/* Very tall screens — keep card vertically centered without stretching */
+@media (min-height: 900px) {
+  .lg-page { align-items: center; }
+}
