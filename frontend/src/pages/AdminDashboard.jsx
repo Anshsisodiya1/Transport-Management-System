@@ -22,6 +22,7 @@ import {
   RiUserAddLine,
   RiSettings4Line,
   RiMapLine,
+  RiTeamLine
 } from "react-icons/ri";
 
 /* ─── tiny helpers ──────────────────────────────────────── */
@@ -140,6 +141,15 @@ const actionCards = [
     chip: "Config",
     path: "/admin/settings",
   },
+  {
+  key: "manage-users",
+  className: "manage-users",
+  icon: <RiTeamLine />,                 
+  title: "Manage Users",
+  desc: "View, edit and remove all students and drivers. Filter by branch, route or stop.",
+  chip: "Users",
+  path: "/admin/manage-users",
+},
 ];
 
 /* ─── AnimatedNumber ────────────────────────────────────── */

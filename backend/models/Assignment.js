@@ -20,7 +20,7 @@ const assignmentSchema = new mongoose.Schema({
     type: Number,
   },
 
-  //  NEW FIELD (VERY IMPORTANT)
+  //  NEW FIELD 
   stopName: {
     type: String,
     default: "-",

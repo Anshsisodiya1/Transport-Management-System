@@ -23,6 +23,7 @@ import DriverDashboard from "./pages/DriverDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import LiveFleetMap from "./pages/LiveFleetMap";
 import "leaflet/dist/leaflet.css";
+import ManageUsers from "./pages/Manageusers";
 function App() {
   const [notification, setNotification] = useState(null);
 
@@ -127,6 +128,14 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <LiveFleetMap />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/manage-users"
+            element={
+              <ProtectedRoute role="admin">
+                <ManageUsers />
               </ProtectedRoute>
             }
           />
