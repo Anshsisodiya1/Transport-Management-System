@@ -1167,6 +1167,683 @@
   letter-spacing: 0.3px;
   text-transform: uppercase;
 }
+
+/* // new css */
+
+
+   /* ADD THESE TO driver-dashboard.css
+  Mirrors student-dashboard settings styles (dd- prefix) */
+
+
+/* ── Profile Info/Settings toggle ── */
+.dd-profile-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.dd-profile-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border, #e2e8f0);
+  background: transparent;
+  color: var(--text-muted, #94a3b8);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.dd-profile-toggle-btn:hover {
+  border-color: var(--accent, #6366f1);
+  color: var(--accent, #6366f1);
+}
+
+.dd-profile-toggle-btn.active {
+  background: var(--accent, #6366f1);
+  border-color: var(--accent, #6366f1);
+  color: #fff;
+}
+
+/* ── Settings wrapper ── */
+.dd-settings-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Settings sub-tabs ── */
+.dd-settings-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.dd-settings-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border, #e2e8f0);
+  background: transparent;
+  color: var(--text-muted, #94a3b8);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.dd-settings-tab:hover {
+  border-color: var(--accent, #6366f1);
+  color: var(--accent, #6366f1);
+}
+
+.dd-settings-tab.active {
+  background: var(--accent, #6366f1);
+  border-color: var(--accent, #6366f1);
+  color: #fff;
+}
+
+/* ── Settings card (the form container) ── */
+.dd-settings-card {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.dd-settings-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text, #1e293b);
+  margin: 0 0 2px;
+}
+
+.dd-settings-desc {
+  font-size: 13px;
+  color: var(--text-muted, #94a3b8);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Labels ── */
+.dd-settings-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: -4px;
+}
+
+/* ── Text / email inputs ── */
+.dd-settings-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border, #e2e8f0);
+  background: var(--input-bg, #f8fafc);
+  color: var(--text, #1e293b);
+  font-size: 14px;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  box-sizing: border-box;
+}
+
+.dd-settings-input:focus {
+  outline: none;
+  border-color: var(--accent, #6366f1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #6366f1) 15%, transparent);
+}
+
+/* OTP input — centered big digits */
+.dd-otp-input {
+  text-align: center;
+  font-size: 22px;
+  letter-spacing: 10px;
+  font-weight: 700;
+}
+
+/* ── Password input wrapper ── */
+.dd-pwd-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dd-pwd-wrap .dd-settings-input {
+  padding-right: 42px;
+}
+
+.dd-pwd-eye {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted, #94a3b8);
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.dd-pwd-eye:hover {
+  color: var(--accent, #6366f1);
+}
+
+/* ── Success / error message bar ── */
+.dd-settings-msg {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.dd-settings-msg.success {
+  background: color-mix(in srgb, #22c55e 12%, transparent);
+  color: #16a34a;
+  border: 1px solid color-mix(in srgb, #22c55e 30%, transparent);
+}
+
+.dd-settings-msg.error {
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+  color: #dc2626;
+  border: 1px solid color-mix(in srgb, #ef4444 30%, transparent);
+}
+
+/* ── Submit button ── */
+.dd-settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 8px;
+  background: var(--accent, #6366f1);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.18s, transform 0.12s;
+  margin-top: 2px;
+}
+
+.dd-settings-btn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.dd-settings-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Ghost link buttons (change email, resend otp) ── */
+.dd-settings-link {
+  background: none;
+  border: none;
+  color: var(--accent, #6366f1);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: left;
+  text-decoration: underline;
+  transition: opacity 0.15s;
+}
+
+.dd-settings-link:hover:not(:disabled) {
+  opacity: 0.7;
+}
+
+.dd-settings-link:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Forgot Password step indicator ── */
+.dd-fp-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 4px;
+}
+
+.dd-fp-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+  font-weight: 500;
+  flex: 1;
+}
+
+.dd-fp-step:not(:last-child)::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: var(--border, #e2e8f0);
+  margin: 0 6px;
+  border-radius: 2px;
+}
+
+.dd-fp-step.active .dd-fp-step-dot {
+  background: var(--accent, #6366f1);
+  color: #fff;
+  border-color: var(--accent, #6366f1);
+}
+
+.dd-fp-step.active {
+  color: var(--accent, #6366f1);
+  font-weight: 700;
+}
+
+.dd-fp-step.done .dd-fp-step-dot {
+  background: #22c55e;
+  color: #fff;
+  border-color: #22c55e;
+}
+
+.dd-fp-step-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border, #e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+/* ── Inline button spinner ── */
+.dd-btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: dd-spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+
+
+/* ═══════════════════════════════════════════════
+   ROUTE SECTION — White Theme  (driver-dashboard)
+   Add these rules to driver-dashboard.css
+   ═══════════════════════════════════════════════ */
+
+/* ── Route summary pills (top of section) ── */
+.dd-route-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.dd-route-summary-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #f8fafc;
+  border: 0.5px solid #e2e8f0;
+  border-radius: 999px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.dd-route-summary-pill strong {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+/* ── Route hero (number + name + path) ── */
+.dd-route-hero {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 4px;
+}
+
+.dd-route-num {
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 22px;
+  font-weight: 500;
+  border-radius: 10px;
+  min-width: 64px;
+  text-align: center;
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
+}
+
+.dd-route-meta {
+  flex: 1;
+  padding-left: 16px;
+}
+
+.dd-route-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 10px;
+}
+
+/* ── Start → End path ── */
+.dd-route-path {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.dd-endpoint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.dd-endpoint.start {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.dd-endpoint.end {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dd-route-line {
+  flex: 1;
+  height: 1.5px;
+  background: linear-gradient(90deg, #bbf7d0, #fecaca);
+  margin: 0 6px;
+  position: relative;
+  min-width: 20px;
+}
+
+.dd-route-line::after {
+  content: "▶";
+  position: absolute;
+  right: -2px;
+  top: -5px;
+  font-size: 10px;
+  color: #f87171;
+}
+
+/* ── Stops list — vertical timeline ── */
+.dd-stops-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.dd-stop-item {
+  display: flex;
+  align-items: stretch;
+  cursor: default;
+}
+
+.dd-stop-item.clickable {
+  cursor: pointer;
+}
+
+/* Dot + vertical connector */
+.dd-stop-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 36px;
+}
+
+.dd-stop-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #c7d2fe;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: #4338ca;
+  flex-shrink: 0;
+  z-index: 1;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.dd-stop-dot.done {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #ffffff;
+}
+
+.dd-stop-dot.last {
+  border-color: #e87a2e;
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.dd-stop-line-seg {
+  width: 2px;
+  flex: 1;
+  min-height: 24px;
+  background: #e0e7ff;
+}
+
+/* Stop content area */
+.dd-stop-content {
+  flex: 1;
+  padding: 6px 0 10px 12px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Stop name pill */
+.dd-stop-name-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: #f8fafc;
+  border: 0.5px solid #e2e8f0;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+  transition: background 0.15s;
+}
+
+.dd-stop-name-pill svg,
+.dd-stop-name-pill .icon {
+  font-size: 12px;
+  color: #6366f1;
+  flex-shrink: 0;
+}
+
+/* Done state */
+.dd-stop-item.done .dd-stop-name-pill {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.dd-stop-item.done .dd-stop-name-pill svg,
+.dd-stop-item.done .dd-stop-name-pill .icon {
+  color: #16a34a;
+}
+
+/* Last stop state */
+.dd-stop-item.last-stop .dd-stop-name-pill {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #c2410c;
+}
+
+/* ── Timing chip (next to stop pill) ── */
+.dd-stop-timing-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #eef2ff;
+  color: #4338ca;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.dd-stop-timing-chip svg,
+.dd-stop-timing-chip .icon {
+  font-size: 11px;
+}
+
+/* Done timing chip */
+.dd-stop-item.done .dd-stop-timing-chip {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+/* Last stop timing chip */
+.dd-stop-item.last-stop .dd-stop-timing-chip {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 0.5px solid #fed7aa;
+}
+
+/* "tap to mark" hint */
+.dd-stop-tap-hint {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-left: auto;
+}
+
+/* Progress label in card header */
+.dd-stops-progress-label {
+  margin-left: auto;
+  font-size: 12px;
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+/* ── Scheduled timings grid ── */
+.dd-timings-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dd-timing-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background: #f0fdf4;
+  color: #166534;
+  border: 0.5px solid #bbf7d0;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.dd-timing-chip svg,
+.dd-timing-chip .icon {
+  font-size: 13px;
+}
+
+/* ── Empty state (no route) ── */
+.dd-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.dd-empty-state svg,
+.dd-empty-state .icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.35;
+}
+
+.dd-empty-state p {
+  font-size: 15px;
+  font-weight: 500;
+  color: #475569;
+  margin: 0 0 4px;
+}
+
+.dd-empty-state span {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .dd-route-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .dd-route-meta {
+    padding-left: 0;
+    width: 100%;
+  }
+
+  .dd-route-path {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .dd-stop-tap-hint {
+    display: none;
+  }
+
+  .dd-stops-progress-label {
+    margin-left: 8px;
+  }
+}
+
+
+@keyframes dd-spin {
+  to { transform: rotate(360deg); }
+}
 /* ═══════════════════════════════════
    RESPONSIVE TWEAKS
 ═══════════════════════════════════ */

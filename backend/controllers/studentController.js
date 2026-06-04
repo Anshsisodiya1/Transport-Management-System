@@ -10,6 +10,11 @@ exports.getStudentDashboard = async (req, res) => {
     const student = await User.findById(studentId).select("-password");
     const profile = await StudentProfile.findOne({ user: studentId });
 
+    // ✅ Fetch admin details
+    const admin = await User.findOne({ role: "admin" }).select(
+      "name email phone phoneNumber"
+    );
+
     const assignment = await Assignment.findOne({
       student: studentId,
       type: "student",
@@ -21,26 +26,30 @@ exports.getStudentDashboard = async (req, res) => {
     if (!assignment) {
       return res.json({
         student,
-        branch: profile?.branch || "N/A",
+        branch:   profile?.branch   || "N/A",
         stopName: profile?.stopName || "N/A",
         assigned: false,
+        admin:    admin || null,
+        driver:   null,
       });
     }
 
+    // ✅ Populate driver with name, email, phone
     const driverAssignment = await Assignment.findOne({
-      bus: assignment.bus._id,
+      bus:  assignment.bus._id,
       type: "driver",
-    }).populate("driver");
+    }).populate("driver", "name email phone phoneNumber contact");
 
     res.json({
       student,
-      branch: profile?.branch || "N/A",
-      stopName: profile?.stopName || "N/A",
-      assigned: true,
+      branch:     profile?.branch   || "N/A",
+      stopName:   profile?.stopName || "N/A",
+      assigned:   true,
       seatNumber: assignment.seatNumber,
-      bus: assignment.bus,
-      route: assignment.bus?.route || null,
-      driver: driverAssignment?.driver || null,
+      bus:        assignment.bus,
+      route:      assignment.bus?.route || null,
+      driver:     driverAssignment?.driver || null,
+      admin:      admin || null,          // ✅ admin added
     });
   } catch (err) {
     console.error("Student Dashboard Error:", err);
@@ -48,8 +57,7 @@ exports.getStudentDashboard = async (req, res) => {
   }
 };
 
-// FIX: This was MISSING — student dashboard calls this on page load
-// to recover trip state after a browser refresh.
+// Active trip check — for page refresh recovery
 exports.getActiveTrip = async (req, res) => {
   try {
     const { busId } = req.params;

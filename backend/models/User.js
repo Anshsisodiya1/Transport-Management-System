@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   // Optional (used only for driver)
   userId: {
     type: String,
-    sparse: true, //  prevents duplicate null error
+    sparse: true,
   },
 
   // Used for student
@@ -36,10 +36,15 @@ const userSchema = new mongoose.Schema({
     enum: ["admin", "driver", "student"],
     required: true,
   },
+
   fcmToken: {
-  type: String,
-  default: null,
-},
+    type: String,
+    default: null,
+  },
+
+  // For forgot password OTP
+  otp:        { type: String, default: null },
+  otpExpires: { type: Date,   default: null },
 });
 
 module.exports = mongoose.model("User", userSchema);
