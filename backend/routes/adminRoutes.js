@@ -61,7 +61,8 @@ router.get(
     try {
       const branches = await Student.distinct("branch");
 
-      const stops = await Assignment.distinct("stopName");
+      // FIX: stopName lives on Student, not Assignment
+      const stops = await Student.distinct("stopName");
 
       const routeDocs = await Route.find({}, "routeNumber routeName").lean();
 
@@ -114,27 +115,21 @@ router.get(
       let enriched = await Promise.all(
         students.map(async (s) => {
           let routeNo = "—";
-          let stopName = "—";
 
-          if (Assignment) {
-            const asgn = await Assignment.findOne({ student: s.user._id })
-              .populate({
-                path: "bus",
-                populate: {
-                  path: "route",
-                  select: "routeNumber routeName",
-                },
-              })
-              .lean();
+          // Route lookup still comes from Assignment (bus/route assignment)
+          const asgn = await Assignment.findOne({ student: s.user._id })
+            .populate({
+              path: "bus",
+              populate: {
+                path: "route",
+                select: "routeNumber routeName",
+              },
+            })
+            .lean();
 
-            // Stop Name
-            stopName = asgn?.stopName || s.stopName || "—";
-
-            // Route Number
-            if (asgn?.bus?.route) {
-              routeNo =
-                asgn.bus.route.routeNumber || asgn.bus.route.routeName || "—";
-            }
+          if (asgn?.bus?.route) {
+            routeNo =
+              asgn.bus.route.routeNumber || asgn.bus.route.routeName || "—";
           }
 
           return {
@@ -149,7 +144,8 @@ router.get(
 
             branch: s.branch || "—",
 
-            stopName,
+            // FIX: stopName comes straight from the Student document
+            stopName: s.stopName || "—",
             routeNo,
           };
         }),
@@ -334,15 +330,10 @@ router.put(
 
       if (branch) student.branch = branch;
 
-      await student.save();
+      // FIX: stopName saved on the Student document itself
+      if (stopName) student.stopName = stopName;
 
-      // UPDATE ASSIGNMENT STOP
-      if (stopName) {
-        await Assignment.findOneAndUpdate(
-          { student: student.user },
-          { stopName },
-        );
-      }
+      await student.save();
 
       res.json({
         success: true,

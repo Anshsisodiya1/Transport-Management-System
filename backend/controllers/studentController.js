@@ -10,7 +10,7 @@ exports.getStudentDashboard = async (req, res) => {
     const student = await User.findById(studentId).select("-password");
     const profile = await StudentProfile.findOne({ user: studentId });
 
-    // ✅ Fetch admin details
+    // Fetch admin details
     const admin = await User.findOne({ role: "admin" }).select(
       "name email phone phoneNumber"
     );

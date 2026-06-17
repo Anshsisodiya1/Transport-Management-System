@@ -297,19 +297,26 @@
   justify-content: center;
 }
 
-/* ── Filter Panel ────────────────────────────── */
 .mu-filter-panel {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  z-index: 200;
+  left: auto;
+  z-index: 500;
   background: var(--mu-surface);
   border: 1.5px solid var(--mu-border);
   border-radius: var(--mu-radius);
   box-shadow: var(--mu-shadow-lg);
   padding: 18px;
   width: 300px;
+  max-width: min(300px, calc(100vw - 32px));
+  box-sizing: border-box;
   animation: mu-popIn 0.2s cubic-bezier(0.34,1.4,0.64,1);
+}
+
+.mu-toolbar {
+  position: relative;
+  z-index: 100;
 }
 
 @keyframes mu-popIn {

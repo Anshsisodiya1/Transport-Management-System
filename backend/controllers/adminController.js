@@ -160,8 +160,6 @@ exports.getDrivers = async (req, res) => {
 };
 
 // GET /api/admin/live-buses
-// Returns all buses with active trip status, driver info, and last known GPS location.
-// Called once on admin live-tracking page mount — socket takes over after that.
 exports.getLiveBuses = async (req, res) => {
   try {
     const buses = await Bus.find().lean();
@@ -216,3 +214,4 @@ exports.getBusHistory = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+

@@ -252,10 +252,17 @@ export default function ManageUsers() {
     finally { setLoading(false); }
   }, [search]);
 
-  useEffect(() => {
-    if (tab === "student") fetchStudents();
-    else fetchDrivers();
-  }, [tab, fetchStudents, fetchDrivers]);
+
+useEffect(() => {
+  fetchStudents();
+  fetchDrivers();
+}, []); 
+
+
+useEffect(() => {
+  if (tab === "student") fetchStudents();
+  else fetchDrivers();
+}, [tab, fetchStudents, fetchDrivers]);
 
   const handleSave = async (form) => {
     try {

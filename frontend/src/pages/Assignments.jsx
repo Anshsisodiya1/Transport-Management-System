@@ -116,10 +116,40 @@ function Avatar({ name, type }) {
   const initials = (name || "?")
     .split(" ")
     .slice(0, 2)
-    .map(w => w[0])
+    .map((w) => w[0])
     .join("")
     .toUpperCase();
   return <div className={`asgn-avatar ${type}`}>{initials}</div>;
+}
+
+/* ── Seat Picker Modal ────────────────────────────────────── */
+function SeatPickerModal({ bus, bookedSeats, currentSeat, onConfirm, onClose }) {
+  return (
+    <div
+      className="asgn-modal-overlay"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="asgn-modal" style={{ maxWidth: 500 }}>
+        {/* Header */}
+        <div className="asgn-modal-header">
+          <h3>Select Seat — {bus?.busNumber}</h3>
+          <button className="asgn-modal-close" onClick={onClose}>
+            <Ic.X />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="asgn-modal-body" style={{ padding: "20px" }}>
+          <BusSeatLayout
+            capacity={bus?.capacity}
+            bookedSeats={bookedSeats}
+            selectedSeat={currentSeat}
+            onConfirm={onConfirm}
+          />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ── Main component ───────────────────────────────────────── */
@@ -129,11 +159,11 @@ function Assignments() {
   const [drivers, setDrivers]         = useState([]);
   const [buses, setBuses]             = useState([]);
 
-  const [type, setType]             = useState("");
-  const [form, setForm]             = useState({ studentId: "", driverId: "", busId: "" });
-  const [seat, setSeat]             = useState(null);
+  const [type, setType]               = useState("");
+  const [form, setForm]               = useState({ studentId: "", driverId: "", busId: "" });
+  const [seat, setSeat]               = useState(null);
   const [selectedBus, setSelectedBus] = useState(null);
-  const [seatModal, setSeatModal]   = useState(false);
+  const [seatModal, setSeatModal]     = useState(false);
 
   const [editOpen, setEditOpen]   = useState(false);
   const [editData, setEditData]   = useState(null);
@@ -178,21 +208,30 @@ function Assignments() {
   };
 
   const resetForm = () => {
-    setType(""); setForm({ studentId: "", driverId: "", busId: "" });
-    setSeat(null); setSelectedBus(null);
+    setType("");
+    setForm({ studentId: "", driverId: "", busId: "" });
+    setSeat(null);
+    setSelectedBus(null);
   };
 
   /* ── Delete ── */
   const handleDelete = async (id) => {
+    if (!window.confirm("Delete this assignment?")) return;
     await API.delete(`/assignments/${id}`);
     fetchData();
   };
 
   /* ── Edit ── */
   const openEdit = (a) => {
+    const bus = buses.find((b) => b._id === a.bus?._id);
     setEditOpen(true);
-    setEditData({ id: a._id, type: a.type, busId: a.bus?._id, seatNumber: a.seatNumber });
-    setSelectedBus(buses.find(b => b._id === a.bus?._id));
+    setEditData({
+      id: a._id,
+      type: a.type,
+      busId: a.bus?._id,
+      seatNumber: a.seatNumber,
+    });
+    setSelectedBus(bus);
   };
 
   const handleUpdate = async () => {
@@ -201,16 +240,37 @@ function Assignments() {
         busId:      editData.busId,
         seatNumber: editData.type === "student" ? editData.seatNumber : undefined,
       });
-      setEditOpen(false); setEditData(null); fetchData();
+      setEditOpen(false);
+      setEditData(null);
+      setSelectedBus(null);
+      fetchData();
     } catch (err) {
       alert(err.response?.data?.message || "Update failed");
     }
   };
 
+  const closeEdit = () => {
+    setEditOpen(false);
+    setEditData(null);
+    setSelectedBus(null);
+  };
+
+  /* ── Booked seats (exclude current edit assignment) ── */
+  const bookedSeats = assignments
+    .filter((a) => {
+      if (!selectedBus) return false;
+      if (editOpen && editData?.id === a._id) return false;
+      return (
+        a.type === "student" &&
+        String(a.bus?._id) === String(selectedBus?._id)
+      );
+    })
+    .map((a) => Number(a.seatNumber));
+
   /* ── Filter + paginate ── */
   const filtered = assignments
-    .filter(a => filterType === "all" || a.type === filterType)
-    .filter(a => {
+    .filter((a) => filterType === "all" || a.type === filterType)
+    .filter((a) => {
       const name = a.type === "student" ? a.student?.name : a.driver?.name;
       const bus  = a.bus?.busNumber;
       return (
@@ -219,14 +279,13 @@ function Assignments() {
       );
     });
 
-  const totalPages    = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const totalPages      = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
-  const currentItems  = filtered.slice(
+  const currentItems    = filtered.slice(
     (safeCurrentPage - 1) * itemsPerPage,
     safeCurrentPage * itemsPerPage
   );
 
-  /* visible page numbers (max 5) */
   const pageNumbers = () => {
     const pages = [];
     const start = Math.max(1, safeCurrentPage - 2);
@@ -235,16 +294,8 @@ function Assignments() {
     return pages;
   };
 
-  const bookedSeats = assignments
-    .filter(a => {
-      if (!selectedBus) return false;
-      if (editOpen && editData?.id === a._id) return false;
-      return a.type === "student" && String(a.bus?._id) === String(selectedBus?._id);
-    })
-    .map(a => Number(a.seatNumber));
-
-  const studentCount = assignments.filter(a => a.type === "student").length;
-  const driverCount  = assignments.filter(a => a.type === "driver").length;
+  const studentCount = assignments.filter((a) => a.type === "student").length;
+  const driverCount  = assignments.filter((a) => a.type === "driver").length;
 
   return (
     <Layout>
@@ -281,7 +332,15 @@ function Assignments() {
             <div className="asgn-form-row">
 
               <Field label="Assignment Type" icon={Ic.Assign}>
-                <select value={type} onChange={e => { setType(e.target.value); setForm({ studentId: "", driverId: "", busId: "" }); setSeat(null); }}>
+                <select
+                  value={type}
+                  onChange={(e) => {
+                    setType(e.target.value);
+                    setForm({ studentId: "", driverId: "", busId: "" });
+                    setSeat(null);
+                    setSelectedBus(null);
+                  }}
+                >
                   <option value="">Select type…</option>
                   <option value="student">Student</option>
                   <option value="driver">Driver</option>
@@ -290,9 +349,12 @@ function Assignments() {
 
               {type === "student" && (
                 <Field label="Student" icon={Ic.Student}>
-                  <select onChange={e => setForm({ ...form, studentId: e.target.value })}>
+                  <select
+                    value={form.studentId}
+                    onChange={(e) => setForm({ ...form, studentId: e.target.value })}
+                  >
                     <option value="">Select student…</option>
-                    {students.map(s => (
+                    {students.map((s) => (
                       <option key={s._id} value={s.user?._id}>{s.user?.name}</option>
                     ))}
                   </select>
@@ -301,9 +363,12 @@ function Assignments() {
 
               {type === "driver" && (
                 <Field label="Driver" icon={Ic.Driver}>
-                  <select onChange={e => setForm({ ...form, driverId: e.target.value })}>
+                  <select
+                    value={form.driverId}
+                    onChange={(e) => setForm({ ...form, driverId: e.target.value })}
+                  >
                     <option value="">Select driver…</option>
-                    {drivers.map(d => (
+                    {drivers.map((d) => (
                       <option key={d._id} value={d.user?._id}>{d.user?.name}</option>
                     ))}
                   </select>
@@ -312,14 +377,16 @@ function Assignments() {
 
               <Field label="Bus" icon={Ic.Bus}>
                 <select
-                  onChange={e => {
-                    const bus = buses.find(b => b._id === e.target.value);
+                  value={form.busId}
+                  onChange={(e) => {
+                    const bus = buses.find((b) => b._id === e.target.value);
                     setForm({ ...form, busId: e.target.value });
                     setSelectedBus(bus);
+                    setSeat(null); // reset seat when bus changes
                   }}
                 >
                   <option value="">Select bus…</option>
-                  {buses.map(b => (
+                  {buses.map((b) => (
                     <option key={b._id} value={b._id}>{b.busNumber}</option>
                   ))}
                 </select>
@@ -328,9 +395,15 @@ function Assignments() {
               {type === "student" && (
                 <div className="asgn-form-field">
                   <label>Seat</label>
-                  <button className="asgn-seat-btn" onClick={() => setSeatModal(true)}>
+                  <button
+                    className="asgn-seat-btn"
+                    onClick={() => {
+                      if (!selectedBus) return alert("Please select a bus first");
+                      setSeatModal(true);
+                    }}
+                  >
                     <Ic.Seat />
-                    Select Seat
+                    {seat !== null ? "Change Seat" : "Select Seat"}
                     <span className={`asgn-seat-pill ${seat === null ? "none" : ""}`}>
                       {seat !== null ? seat : "—"}
                     </span>
@@ -343,7 +416,13 @@ function Assignments() {
                 <button
                   className="asgn-btn-assign"
                   onClick={handleAssign}
-                  disabled={type === "student" && seat === null}
+                  disabled={
+                    !type ||
+                    !form.busId ||
+                    (type === "student" && seat === null) ||
+                    (type === "student" && !form.studentId) ||
+                    (type === "driver" && !form.driverId)
+                  }
                 >
                   <Ic.Plus /> Assign
                 </button>
@@ -359,7 +438,7 @@ function Assignments() {
           {/* Toolbar */}
           <div className="asgn-toolbar">
             <div className="asgn-tabs">
-              {["all", "student", "driver"].map(t => (
+              {["all", "student", "driver"].map((t) => (
                 <button
                   key={t}
                   className={`asgn-tab ${filterType === t ? "active" : ""}`}
@@ -377,7 +456,7 @@ function Assignments() {
                   type="text"
                   placeholder="Search name or bus…"
                   value={search}
-                  onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+                  onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                 />
               </div>
             </div>
@@ -404,7 +483,7 @@ function Assignments() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map(a => {
+                  {currentItems.map((a) => {
                     const name = a.type === "student" ? a.student?.name : a.driver?.name;
                     return (
                       <tr key={a._id}>
@@ -421,16 +500,18 @@ function Assignments() {
                           </div>
                         </td>
                         <td>
-                          {a.bus?.busNumber
-                            ? <span className="asgn-bus-chip">{a.bus.busNumber}</span>
-                            : <span style={{ color: "var(--asgn-hint)", fontSize: ".8rem" }}>—</span>
-                          }
+                          {a.bus?.busNumber ? (
+                            <span className="asgn-bus-chip">{a.bus.busNumber}</span>
+                          ) : (
+                            <span style={{ color: "var(--asgn-hint)", fontSize: ".8rem" }}>—</span>
+                          )}
                         </td>
                         <td>
-                          {a.type === "student" && a.seatNumber != null
-                            ? <span className="asgn-seat-badge">{a.seatNumber}</span>
-                            : <span style={{ color: "var(--asgn-hint)", fontSize: ".8rem" }}>—</span>
-                          }
+                          {a.type === "student" && a.seatNumber != null ? (
+                            <span className="asgn-seat-badge">{a.seatNumber}</span>
+                          ) : (
+                            <span style={{ color: "var(--asgn-hint)", fontSize: ".8rem" }}>—</span>
+                          )}
                         </td>
                         <td>
                           <div className="asgn-row-actions">
@@ -454,17 +535,18 @@ function Assignments() {
           {totalPages > 1 && (
             <div className="asgn-pagination">
               <span className="asgn-page-info">
-                Showing {(safeCurrentPage - 1) * itemsPerPage + 1}–{Math.min(safeCurrentPage * itemsPerPage, filtered.length)} of {filtered.length}
+                Showing {(safeCurrentPage - 1) * itemsPerPage + 1}–
+                {Math.min(safeCurrentPage * itemsPerPage, filtered.length)} of {filtered.length}
               </span>
               <div className="asgn-page-btns">
                 <button
                   className="asgn-page-btn"
                   disabled={safeCurrentPage === 1}
-                  onClick={() => setCurrentPage(p => p - 1)}
+                  onClick={() => setCurrentPage((p) => p - 1)}
                 >
                   <Ic.Prev />
                 </button>
-                {pageNumbers().map(n => (
+                {pageNumbers().map((n) => (
                   <button
                     key={n}
                     className={`asgn-page-btn ${n === safeCurrentPage ? "current" : ""}`}
@@ -476,7 +558,7 @@ function Assignments() {
                 <button
                   className="asgn-page-btn"
                   disabled={safeCurrentPage === totalPages}
-                  onClick={() => setCurrentPage(p => p + 1)}
+                  onClick={() => setCurrentPage((p) => p + 1)}
                 >
                   <Ic.Next />
                 </button>
@@ -487,11 +569,14 @@ function Assignments() {
 
         {/* ── Edit Modal ── */}
         {editOpen && editData && (
-          <div className="asgn-modal-overlay" onClick={e => e.target === e.currentTarget && setEditOpen(false)}>
+          <div
+            className="asgn-modal-overlay"
+            onClick={(e) => e.target === e.currentTarget && closeEdit()}
+          >
             <div className="asgn-modal">
               <div className="asgn-modal-header">
                 <h3>Edit Assignment</h3>
-                <button className="asgn-modal-close" onClick={() => setEditOpen(false)}>
+                <button className="asgn-modal-close" onClick={closeEdit}>
                   <Ic.X />
                 </button>
               </div>
@@ -503,13 +588,13 @@ function Assignments() {
                     <span className="asgn-input-ico"><Ic.Bus /></span>
                     <select
                       value={editData.busId}
-                      onChange={e => {
-                        const bus = buses.find(b => b._id === e.target.value);
-                        setEditData({ ...editData, busId: e.target.value });
+                      onChange={(e) => {
+                        const bus = buses.find((b) => b._id === e.target.value);
+                        setEditData({ ...editData, busId: e.target.value, seatNumber: null });
                         setSelectedBus(bus);
                       }}
                     >
-                      {buses.map(b => (
+                      {buses.map((b) => (
                         <option key={b._id} value={b._id}>{b.busNumber}</option>
                       ))}
                     </select>
@@ -519,16 +604,22 @@ function Assignments() {
                 {editData.type === "student" && (
                   <div className="asgn-form-field">
                     <label>Seat</label>
-                    <button className="asgn-seat-btn" onClick={() => setSeatModal(true)}>
+                    <button
+                      className="asgn-seat-btn"
+                      onClick={() => setSeatModal(true)}
+                    >
                       <Ic.Seat />
                       Change Seat
-                      <span className="asgn-seat-pill">{editData.seatNumber}</span>
+                      <span className="asgn-seat-pill">
+                        {editData.seatNumber ?? "—"}
+                      </span>
                     </button>
                   </div>
                 )}
+
               </div>
               <div className="asgn-modal-footer">
-                <button className="asgn-btn-cancel" onClick={() => setEditOpen(false)}>Cancel</button>
+                <button className="asgn-btn-cancel" onClick={closeEdit}>Cancel</button>
                 <button className="asgn-btn-save" onClick={handleUpdate}>
                   <Ic.Save /> Save Changes
                 </button>
@@ -537,17 +628,18 @@ function Assignments() {
           </div>
         )}
 
-        {/* ── Seat picker modal ── */}
+        {/* ── Seat Picker Modal ── */}
         {seatModal && selectedBus && (
-          <BusSeatLayout
-            capacity={selectedBus.capacity}
+          <SeatPickerModal
+            bus={selectedBus}
             bookedSeats={bookedSeats}
-            selectedSeat={editOpen ? editData?.seatNumber : seat}
-            onConfirm={s => {
+            currentSeat={editOpen ? editData?.seatNumber : seat}
+            onConfirm={(s) => {
               if (editOpen) setEditData({ ...editData, seatNumber: s });
               else setSeat(s);
               setSeatModal(false);
             }}
+            onClose={() => setSeatModal(false)}
           />
         )}
 

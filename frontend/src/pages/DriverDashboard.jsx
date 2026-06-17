@@ -6,9 +6,9 @@ import {
   FaBus, FaRoute, FaUserCircle, FaSignOutAlt,
   FaMapMarkerAlt, FaClock, FaIdCard, FaPhone, FaEnvelope, FaTachometerAlt,
   FaSort, FaSortUp, FaSortDown, FaUsers, FaSearch,
-  FaLock, FaEye, FaEyeSlash, FaKey,
+  FaLock, FaEye, FaEyeSlash,
 } from "react-icons/fa";
-import { MdNavigation, MdGpsFixed, MdGpsOff, MdAssignment, MdEmail } from "react-icons/md";
+import { MdNavigation, MdGpsFixed, MdGpsOff, MdAssignment } from "react-icons/md";
 import { IoCheckmarkCircle, IoCloseCircle, IoWifiOutline } from "react-icons/io5";
 import { RiSteering2Fill } from "react-icons/ri";
 import { HiChevronDown, HiChevronUp } from "react-icons/hi";
@@ -48,29 +48,14 @@ function PwdInput({ placeholder, value, onChange, id }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ProfileSettings Component
+// ProfileSettings Component — Change Password only
 // ─────────────────────────────────────────────────────────────────────────────
-function ProfileSettings({ token, serverUrl, onEmailUpdate }) {
-  const [settingsTab, setSettingsTab] = useState("change-password");
-
+function ProfileSettings({ token, serverUrl }) {
   const [oldPwd,     setOldPwd]     = useState("");
   const [newPwd,     setNewPwd]     = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
   const [pwdLoading, setPwdLoading] = useState(false);
   const [pwdMsg,     setPwdMsg]     = useState(null);
-
-  const [newEmail,     setNewEmail]     = useState("");
-  const [emailPwd,     setEmailPwd]     = useState("");
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [emailMsg,     setEmailMsg]     = useState(null);
-
-  const [fpEmail,   setFpEmail]   = useState("");
-  const [fpOtp,     setFpOtp]     = useState("");
-  const [fpNewPwd,  setFpNewPwd]  = useState("");
-  const [fpConfirm, setFpConfirm] = useState("");
-  const [fpStep,    setFpStep]    = useState(1);
-  const [fpLoading, setFpLoading] = useState(false);
-  const [fpMsg,     setFpMsg]     = useState(null);
 
   const showMsg = (setter, text, type = "success") => {
     setter({ text, type });
@@ -100,201 +85,23 @@ function ProfileSettings({ token, serverUrl, onEmailUpdate }) {
     }
   };
 
-  const handleUpdateEmail = async () => {
-    if (!newEmail || !emailPwd)
-      return showMsg(setEmailMsg, "All fields are required", "error");
-    setEmailLoading(true);
-    try {
-      const res = await axios.post(
-        `${serverUrl}/api/auth/update-email`,
-        { newEmail, password: emailPwd },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      showMsg(setEmailMsg, "Email updated successfully! ✓");
-      setNewEmail(""); setEmailPwd("");
-      if (onEmailUpdate) onEmailUpdate(res.data.email);
-    } catch (err) {
-      showMsg(setEmailMsg, err.response?.data?.message || "Failed to update email", "error");
-    } finally {
-      setEmailLoading(false);
-    }
-  };
-
-  const handleSendOtp = async () => {
-    if (!fpEmail) return showMsg(setFpMsg, "Enter your email", "error");
-    setFpLoading(true);
-    try {
-      await axios.post(`${serverUrl}/api/auth/forgot-password`, { email: fpEmail });
-      showMsg(setFpMsg, "OTP sent to your email ✓");
-      setFpStep(2);
-    } catch (err) {
-      showMsg(setFpMsg, err.response?.data?.message || "Failed to send OTP", "error");
-    } finally {
-      setFpLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!fpOtp) return showMsg(setFpMsg, "Enter the OTP", "error");
-    setFpLoading(true);
-    try {
-      await axios.post(`${serverUrl}/api/auth/verify-otp`, { email: fpEmail, otp: fpOtp });
-      showMsg(setFpMsg, "OTP verified ✓");
-      setFpStep(3);
-    } catch (err) {
-      showMsg(setFpMsg, err.response?.data?.message || "Invalid OTP", "error");
-    } finally {
-      setFpLoading(false);
-    }
-  };
-
-  const handleResetPassword = async () => {
-    if (!fpNewPwd || !fpConfirm)
-      return showMsg(setFpMsg, "All fields are required", "error");
-    if (fpNewPwd !== fpConfirm)
-      return showMsg(setFpMsg, "Passwords do not match", "error");
-    if (fpNewPwd.length < 6)
-      return showMsg(setFpMsg, "Password must be at least 6 characters", "error");
-    setFpLoading(true);
-    try {
-      await axios.post(`${serverUrl}/api/auth/reset-password`, {
-        email: fpEmail, otp: fpOtp,
-        newPassword: fpNewPwd, confirmPassword: fpConfirm,
-      });
-      showMsg(setFpMsg, "Password reset successfully! ✓");
-      setFpStep(1); setFpEmail(""); setFpOtp(""); setFpNewPwd(""); setFpConfirm("");
-      setTimeout(() => setSettingsTab("change-password"), 1500);
-    } catch (err) {
-      showMsg(setFpMsg, err.response?.data?.message || "Failed to reset password", "error");
-    } finally {
-      setFpLoading(false);
-    }
-  };
-
-  const settingsTabs = [
-    { id: "change-password", label: "Change Password", icon: <FaLock />  },
-    { id: "update-email",    label: "Update Email",    icon: <MdEmail /> },
-    { id: "forgot-password", label: "Forgot Password", icon: <FaKey />   },
-  ];
-
   return (
     <div className="dd-settings-wrap">
-      <div className="dd-settings-tabs">
-        {settingsTabs.map((t) => (
-          <button
-            key={t.id}
-            className={`dd-settings-tab ${settingsTab === t.id ? "active" : ""}`}
-            onClick={() => {
-              setSettingsTab(t.id);
-              setPwdMsg(null); setEmailMsg(null); setFpMsg(null);
-            }}
-          >
-            {t.icon} {t.label}
-          </button>
-        ))}
+      <div className="dd-settings-card">
+        <h3 className="dd-settings-title"><FaLock /> Change Password</h3>
+        <p className="dd-settings-desc">Enter your current password, then set a new one.</p>
+        {pwdMsg && <div className={`dd-settings-msg ${pwdMsg.type}`}>{pwdMsg.text}</div>}
+        <label className="dd-settings-label">Current Password</label>
+        <PwdInput placeholder="Enter current password" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} />
+        <label className="dd-settings-label">New Password</label>
+        <PwdInput placeholder="Min. 6 characters" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
+        <label className="dd-settings-label">Confirm New Password</label>
+        <PwdInput placeholder="Repeat new password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} />
+        <button className="dd-settings-btn" onClick={handleChangePassword} disabled={pwdLoading}>
+          {pwdLoading ? <span className="dd-btn-spinner" /> : <FaLock />}
+          {pwdLoading ? "Updating…" : "Update Password"}
+        </button>
       </div>
-
-      {settingsTab === "change-password" && (
-        <div className="dd-settings-card">
-          <h3 className="dd-settings-title"><FaLock /> Change Password</h3>
-          <p className="dd-settings-desc">Enter your current password, then set a new one.</p>
-          {pwdMsg && <div className={`dd-settings-msg ${pwdMsg.type}`}>{pwdMsg.text}</div>}
-          <label className="dd-settings-label">Current Password</label>
-          <PwdInput placeholder="Enter current password" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} />
-          <label className="dd-settings-label">New Password</label>
-          <PwdInput placeholder="Min. 6 characters" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
-          <label className="dd-settings-label">Confirm New Password</label>
-          <PwdInput placeholder="Repeat new password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} />
-          <button className="dd-settings-btn" onClick={handleChangePassword} disabled={pwdLoading}>
-            {pwdLoading ? <span className="dd-btn-spinner" /> : <FaLock />}
-            {pwdLoading ? "Updating…" : "Update Password"}
-          </button>
-        </div>
-      )}
-
-      {settingsTab === "update-email" && (
-        <div className="dd-settings-card">
-          <h3 className="dd-settings-title"><MdEmail /> Update Email</h3>
-          <p className="dd-settings-desc">Enter your new email and confirm with your current password.</p>
-          {emailMsg && <div className={`dd-settings-msg ${emailMsg.type}`}>{emailMsg.text}</div>}
-          <label className="dd-settings-label">New Email Address</label>
-          <input
-            type="email"
-            className="dd-settings-input"
-            placeholder="newemail@example.com"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-          />
-          <label className="dd-settings-label">Current Password</label>
-          <PwdInput placeholder="Confirm with your password" value={emailPwd} onChange={(e) => setEmailPwd(e.target.value)} />
-          <button className="dd-settings-btn" onClick={handleUpdateEmail} disabled={emailLoading}>
-            {emailLoading ? <span className="dd-btn-spinner" /> : <MdEmail />}
-            {emailLoading ? "Updating…" : "Update Email"}
-          </button>
-        </div>
-      )}
-
-      {settingsTab === "forgot-password" && (
-        <div className="dd-settings-card">
-          <h3 className="dd-settings-title"><FaKey /> Forgot Password</h3>
-          <div className="dd-fp-steps">
-            {["Email", "OTP", "New Password"].map((s, i) => (
-              <div
-                key={i}
-                className={`dd-fp-step ${fpStep > i + 1 ? "done" : ""} ${fpStep === i + 1 ? "active" : ""}`}
-              >
-                <div className="dd-fp-step-dot">{fpStep > i + 1 ? "✓" : i + 1}</div>
-                <span>{s}</span>
-              </div>
-            ))}
-          </div>
-          {fpMsg && <div className={`dd-settings-msg ${fpMsg.type}`}>{fpMsg.text}</div>}
-          {fpStep === 1 && (
-            <>
-              <p className="dd-settings-desc">Enter your registered email to receive an OTP.</p>
-              <label className="dd-settings-label">Email Address</label>
-              <input type="email" className="dd-settings-input" placeholder="your@email.com" value={fpEmail} onChange={(e) => setFpEmail(e.target.value)} />
-              <button className="dd-settings-btn" onClick={handleSendOtp} disabled={fpLoading}>
-                {fpLoading ? <span className="dd-btn-spinner" /> : <FaEnvelope />}
-                {fpLoading ? "Sending OTP…" : "Send OTP"}
-              </button>
-            </>
-          )}
-          {fpStep === 2 && (
-            <>
-              <p className="dd-settings-desc">Enter the 6-digit OTP sent to <b>{fpEmail}</b></p>
-              <label className="dd-settings-label">OTP</label>
-              <input
-                type="text"
-                className="dd-settings-input dd-otp-input"
-                placeholder="• • • • • •"
-                maxLength={6}
-                value={fpOtp}
-                onChange={(e) => setFpOtp(e.target.value.replace(/\D/g, ""))}
-              />
-              <button className="dd-settings-btn" onClick={handleVerifyOtp} disabled={fpLoading}>
-                {fpLoading ? <span className="dd-btn-spinner" /> : <IoCheckmarkCircle />}
-                {fpLoading ? "Verifying…" : "Verify OTP"}
-              </button>
-              <button className="dd-settings-link" onClick={() => { setFpStep(1); setFpOtp(""); }}>← Change email</button>
-              <button className="dd-settings-link" onClick={handleSendOtp} disabled={fpLoading}>Resend OTP</button>
-            </>
-          )}
-          {fpStep === 3 && (
-            <>
-              <p className="dd-settings-desc">Set your new password.</p>
-              <label className="dd-settings-label">New Password</label>
-              <PwdInput placeholder="Min. 6 characters" value={fpNewPwd} onChange={(e) => setFpNewPwd(e.target.value)} />
-              <label className="dd-settings-label">Confirm Password</label>
-              <PwdInput placeholder="Repeat new password" value={fpConfirm} onChange={(e) => setFpConfirm(e.target.value)} />
-              <button className="dd-settings-btn" onClick={handleResetPassword} disabled={fpLoading}>
-                {fpLoading ? <span className="dd-btn-spinner" /> : <FaLock />}
-                {fpLoading ? "Resetting…" : "Reset Password"}
-              </button>
-            </>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -305,8 +112,17 @@ function ProfileSettings({ token, serverUrl, onEmailUpdate }) {
 function DriverDashboard() {
   const [data,            setData]            = useState(null);
   const [openProfile,     setOpenProfile]     = useState(false);
-  const [tripStarted,     setTripStarted]     = useState(false);
-  const [tripDuration,    setTripDuration]    = useState(0);
+
+  // ── PERSISTED trip state — read from localStorage on mount ──
+  const [tripStarted, setTripStarted] = useState(
+    () => localStorage.getItem("tripActive") === "true"
+  );
+  const [tripDuration, setTripDuration] = useState(() => {
+    const saved = localStorage.getItem("tripStart");
+    if (!saved) return 0;
+    return Math.floor((Date.now() - Number(saved)) / 1000);
+  });
+
   const [coords,          setCoords]          = useState(null);
   const [gpsStatus,       setGpsStatus]       = useState("idle");
   const [socketConnected, setSocketConnected] = useState(false);
@@ -328,6 +144,7 @@ function DriverDashboard() {
   const watchIdRef = useRef(null);
   const timerRef   = useRef(null);
 
+  // ── Socket init ──
   useEffect(() => {
     const s = io(SERVER, {
       transports: ["polling", "websocket"],
@@ -340,6 +157,7 @@ function DriverDashboard() {
     return () => s.disconnect();
   }, []);
 
+  // ── Fetch driver data ──
   useEffect(() => {
     axios
       .get(`${SERVER}/api/driver/me`, { headers: { Authorization: `Bearer ${token}` } })
@@ -347,6 +165,34 @@ function DriverDashboard() {
       .catch((err) => console.error("API Error:", err.message));
   }, [token]);
 
+  // ── AUTO-RESUME trip after refresh/login if trip was active ──
+  useEffect(() => {
+    if (!tripStarted || !data?.bus?._id || !socketRef.current) return;
+
+    const busIdStr    = String(data.bus._id);
+    const driverIdStr = String(data.driver._id);
+    const routeIdStr  = data.route?._id ? String(data.route._id) : null;
+
+    socketRef.current.emit("startTrip", { busId: busIdStr, driverId: driverIdStr, routeId: routeIdStr });
+
+    setGpsStatus("active");
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setCoords({ lat: latitude.toFixed(6), lng: longitude.toFixed(6) });
+        setLocationCount((c) => c + 1);
+        socketRef.current?.emit("sendLocation", {
+          busId: busIdStr, driverId: driverIdStr,
+          routeId: routeIdStr, latitude, longitude,
+        });
+      },
+      () => setGpsStatus("error"),
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
+    );
+    watchIdRef.current = watchId;
+  }, [data]);
+
+  // ── Students fetch ──
   useEffect(() => {
     if (activeSection !== "students") return;
     if (students.length > 0 || studentsLoading) return;
@@ -362,10 +208,12 @@ function DriverDashboard() {
       .finally(() => setStudentsLoading(false));
   }, [activeSection]);
 
+  // ── Reset profile sub-tab when leaving profile section ──
   useEffect(() => {
     if (activeSection !== "profile") setProfileSub("info");
   }, [activeSection]);
 
+  // ── Trip countdown timer ──
   useEffect(() => {
     if (tripStarted) {
       timerRef.current = setInterval(() => setTripDuration((d) => d + 1), 1000);
@@ -376,6 +224,7 @@ function DriverDashboard() {
     return () => clearInterval(timerRef.current);
   }, [tripStarted]);
 
+  // ── Close profile dropdown on outside click ──
   useEffect(() => {
     const handler = (e) => {
       if (!e.target.closest(".dd-profile-wrap")) setOpenProfile(false);
@@ -384,6 +233,7 @@ function DriverDashboard() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // ── Cleanup on unmount ──
   useEffect(() => {
     return () => {
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
@@ -398,6 +248,11 @@ function DriverDashboard() {
     return [h, m, s].map((v) => String(v).padStart(2, "0")).join(":");
   };
 
+  const clearTripStorage = () => {
+    localStorage.removeItem("tripActive");
+    localStorage.removeItem("tripStart");
+  };
+
   const logout = () => {
     if (tripStarted && data?.bus?._id) {
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
@@ -406,6 +261,7 @@ function DriverDashboard() {
         driverId: String(data.driver._id),
       });
     }
+    clearTripStorage();
     localStorage.removeItem("driverToken");
     localStorage.removeItem("role");
     navigate("/");
@@ -417,13 +273,17 @@ function DriverDashboard() {
     if (!data?.driver?._id || !data?.bus?._id) { alert("Driver or bus data missing. Please refresh."); return; }
 
     if (!tripStarted) {
-      setTripStarted(true);
-      setGpsStatus("active");
-      setLocationCount(0);
-
+      // ── START TRIP ──
       const busIdStr    = String(data.bus._id);
       const driverIdStr = String(data.driver._id);
       const routeIdStr  = data.route?._id ? String(data.route._id) : null;
+
+      localStorage.setItem("tripActive", "true");
+      localStorage.setItem("tripStart", Date.now().toString());
+
+      setTripStarted(true);
+      setGpsStatus("active");
+      setLocationCount(0);
 
       socket.emit("startTrip", { busId: busIdStr, driverId: driverIdStr, routeId: routeIdStr });
 
@@ -438,7 +298,11 @@ function DriverDashboard() {
         { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
       );
       watchIdRef.current = watchId;
+
     } else {
+      // ── END TRIP ──
+      clearTripStorage();
+
       setTripStarted(false);
       setGpsStatus("idle");
       setCoords(null);
@@ -464,11 +328,9 @@ function DriverDashboard() {
     }
   };
 
-  // Helper: get stop display name regardless of shape
   const getStopName = (stop) =>
     typeof stop === "string" ? stop : stop?.name || stop?.stopName || "";
 
-  // Helper: get stop timing if available
   const getStopTiming = (stop) =>
     typeof stop === "object" ? stop?.timing || stop?.time || null : null;
 
@@ -566,8 +428,6 @@ function DriverDashboard() {
                 </div>
                 <div className="dd-dropdown-info">
                   <span><FaEnvelope /> {driver?.email}</span>
-                  {/* <span><FaPhone /> {driver?.contact}</span>
-                  <span><FaIdCard /> {driver?.license}</span> */}
                 </div>
                 <button className="dd-logout-btn" onClick={logout}><FaSignOutAlt /> Sign Out</button>
               </div>
@@ -629,7 +489,7 @@ function DriverDashboard() {
           {/* ══════════════════ OVERVIEW ══════════════════ */}
           {activeSection === "overview" && (
             <div className="dd-section">
-              <h2 className="dd-section-title">Welcome back, {driver?.name?.split(" ")[0] || "Driver"} 👋</h2>
+              <h2 className="dd-section-title">Welcome back, {driver?.name?.split(" ")[0] || "Driver"} </h2>
               <div className="dd-stat-grid">
                 <div className="dd-stat-card accent">
                   <div className="dd-stat-icon"><FaBus /></div>
@@ -684,7 +544,7 @@ function DriverDashboard() {
 
               {route ? (
                 <>
-                  {/* Summary pill row */}
+                  {/* Summary pills */}
                   <div className="dd-route-summary-row">
                     <div className="dd-route-summary-pill">
                       <FaRoute /> Route <strong>{route.routeNumber}</strong>
@@ -702,9 +562,18 @@ function DriverDashboard() {
                     )}
                   </div>
 
-                  {/* Route Details card */}
+                  {/* ── Single merged card: Route Details + Stops ── */}
                   <div className="dd-card">
-                    <div className="dd-card-head">Route Details</div>
+                    <div className="dd-card-head" style={{ justifyContent: "space-between" }}>
+                      <span><FaRoute /> Route Details &amp; Stops</span>
+                      {tripStarted && (
+                        <span className="dd-stops-progress-label">
+                          {stopsDone.length}/{stops.length} done
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Route hero */}
                     <div className="dd-route-hero">
                       <div className="dd-route-num">{route.routeNumber}</div>
                       <div className="dd-route-meta">
@@ -722,19 +591,11 @@ function DriverDashboard() {
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Stops card */}
-                  <div className="dd-card">
-                    <div className="dd-card-head" style={{ justifyContent: "space-between" }}>
-                      <span><FaMapMarkerAlt /> Stops</span>
-                      {tripStarted && (
-                        <span className="dd-stops-progress-label">
-                          {stopsDone.length}/{stops.length} done
-                        </span>
-                      )}
-                    </div>
+                    {/* Divider */}
+                    <div style={{ borderTop: "1px solid var(--border)", margin: "0 20px" }} />
 
+                    {/* Stops list */}
                     <div className="dd-stops-list">
                       {stops.map((stop, i) => {
                         const stopName   = getStopName(stop);
@@ -748,7 +609,6 @@ function DriverDashboard() {
                             className={`dd-stop-item ${isDone ? "done" : ""} ${isLast ? "last-stop" : ""} ${tripStarted ? "clickable" : ""}`}
                             onClick={() => tripStarted && toggleStop(stop)}
                           >
-                            {/* Dot + vertical line */}
                             <div className="dd-stop-connector">
                               <div className={`dd-stop-dot ${isDone ? "done" : ""} ${isLast && !isDone ? "last" : ""}`}>
                                 {isDone
@@ -758,21 +618,17 @@ function DriverDashboard() {
                               {!isLast && <div className="dd-stop-line-seg" />}
                             </div>
 
-                            {/* Pill + timing chip */}
                             <div className="dd-stop-content">
                               <div className="dd-stop-name-pill">
                                 <FaMapMarkerAlt className="icon" />
                                 {stopName}
                               </div>
-
-                              {/* Show timing from stop object OR from route.timings array */}
                               {(stopTiming || route.timings?.[i]) && (
                                 <div className="dd-stop-timing-chip">
                                   <FaClock className="icon" />
                                   {stopTiming || route.timings[i]}
                                 </div>
                               )}
-
                               {tripStarted && !isDone && (
                                 <span className="dd-stop-tap-hint">tap to mark</span>
                               )}
@@ -1001,16 +857,7 @@ function DriverDashboard() {
               )}
 
               {profileSub === "settings" && (
-                <ProfileSettings
-                  token={token}
-                  serverUrl={SERVER}
-                  onEmailUpdate={(newEmail) =>
-                    setData((prev) => ({
-                      ...prev,
-                      driver: { ...prev.driver, email: newEmail },
-                    }))
-                  }
-                />
+                <ProfileSettings token={token} serverUrl={SERVER} />
               )}
 
               <button className="dd-logout-card-btn" onClick={logout}><FaSignOutAlt /> Sign Out</button>

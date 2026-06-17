@@ -614,12 +614,6 @@ function Routes() {
             style={{ position: "relative", width: "100%", maxWidth: 600 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              className="modal-close-btn"
-              onClick={() => setSelectedRoute(null)}
-            >
-              ✕
-            </button>
             <RouteViewer
               route={selectedRoute}
               onClose={() => setSelectedRoute(null)}

@@ -1,0 +1,264 @@
+/* ── BusSeatLayout.css — Redbus-inspired ── */
+
+.bsl-wrapper {
+  font-family: "Inter", "Segoe UI", sans-serif;
+  background: var(--color-background-primary, #fff);
+  border-radius: 12px;
+  padding: 16px 18px;
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+}
+
+/* ── Header ── */
+.bsl-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.bsl-header-icon {
+  width: 34px;
+  height: 34px;
+  background: #e8f0fe;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3b5bdb;
+  flex-shrink: 0;
+}
+
+.bsl-header-text h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #212529;
+}
+
+.bsl-header-text p {
+  margin: 1px 0 0;
+  font-size: 11px;
+  color: #868e96;
+}
+
+/* ── Legend ── */
+.bsl-legend {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.bsl-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #495057;
+  font-weight: 500;
+}
+
+.bsl-legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.bsl-legend-dot.available { background: #f1f3f5; border: 1.5px solid #ced4da; }
+.bsl-legend-dot.booked    { background: #ffe3e3; border: 1.5px solid #ffa8a8; }
+.bsl-legend-dot.selected  { background: #d3f9d8; border: 1.5px solid #69db7c; }
+
+/* ── Bus Shell ── */
+.bsl-bus {
+  background: #f8f9fa;
+  border: 1.5px solid #dee2e6;
+  border-radius: 10px;
+  padding: 12px 14px;
+  position: relative;
+}
+
+.bsl-bus::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: #3b5bdb;
+  border-radius: 10px 10px 0 0;
+}
+
+/* ── Driver Row ── */
+.bsl-driver-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #dee2e6;
+}
+
+.bsl-driver-seat {
+  width: 32px;
+  height: 32px;
+  background: #343a40;
+  color: #f8f9fa;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bsl-driver-label {
+  font-size: 11px;
+  color: #868e96;
+  font-weight: 500;
+}
+
+/* ── Seat Grid — 2+aisle+2 Redbus layout ── */
+.bsl-seat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 20px 1fr 1fr;
+  gap: 6px;
+  align-items: center;
+}
+
+.bsl-aisle {
+  grid-column: 3;
+  height: 100%;
+}
+
+.bsl-seat {
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 38px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1.5px solid transparent;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  cursor: pointer;
+  user-select: none;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.bsl-seat-num {
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bsl-seat svg {
+  width: 13px;
+  height: 13px;
+}
+
+.bsl-seat.available {
+  background: #f1f3f5;
+  border-color: #ced4da;
+  color: #495057;
+}
+
+.bsl-seat.available:hover {
+  background: #dbe4ff;
+  border-color: #748ffc;
+  color: #3b5bdb;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(59, 91, 219, 0.18);
+}
+
+.bsl-seat.booked {
+  background: #ffe3e3;
+  border-color: #ffa8a8;
+  color: #c92a2a;
+  cursor: not-allowed;
+}
+
+.bsl-seat.selected {
+  background: #d3f9d8;
+  border-color: #51cf66;
+  color: #2f9e44;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(81, 207, 102, 0.22);
+}
+
+/* ── Footer ── */
+.bsl-footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.bsl-selected-info {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #495057;
+}
+
+.bsl-selected-badge {
+  background: #d3f9d8;
+  color: #2f9e44;
+  border: 1.5px solid #51cf66;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 32px;
+  text-align: center;
+}
+
+.bsl-selected-badge.empty {
+  background: #f1f3f5;
+  color: #868e96;
+  border-color: #dee2e6;
+}
+
+.bsl-confirm-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  background: #3b5bdb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.12s ease;
+  white-space: nowrap;
+}
+
+.bsl-confirm-btn:hover {
+  background: #2f4acf;
+  transform: translateY(-1px);
+}
+
+.bsl-confirm-btn:disabled {
+  background: #dee2e6;
+  color: #adb5bd;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 380px) {
+  .bsl-wrapper { padding: 12px; }
+  .bsl-seat { max-width: 32px; font-size: 9px; }
+  .bsl-footer { flex-direction: column; align-items: flex-start; }
+  .bsl-confirm-btn { width: 100%; justify-content: center; }
+}

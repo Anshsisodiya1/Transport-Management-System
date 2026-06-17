@@ -2,20 +2,21 @@ const Assignment = require("../models/Assignment");
 const Driver = require("../models/Driver");
 const User = require("../models/User");
 const Route = require("../models/Route");
+const Student = require("../models/Student");
 
+// =========================================
+// DRIVER DASHBOARD DATA
+// =========================================
 exports.getDriverData = async (req, res) => {
   try {
     const driverId = req.user._id;
 
-    // FETCH USER
     const user = await User.findById(driverId);
 
-    // FETCH DRIVER PROFILE
     const driverProfile = await Driver.findOne({
       user: driverId,
     });
 
-    // FETCH ASSIGNMENT WITH BUS + ROUTE
     const assignment = await Assignment.findOne({
       driver: driverId,
       type: "driver",
@@ -26,19 +27,16 @@ exports.getDriverData = async (req, res) => {
       },
     });
 
-    // FORMAT ROUTE STOPS
     let formattedRoute = null;
 
     if (assignment?.bus?.route) {
       formattedRoute = {
         ...assignment.bus.route.toObject(),
-
-        // FIXED STOPS
         stops: assignment.bus.route.stops.map((s) => s.name),
       };
     }
-    console.log(assignment?.bus?.route);
-    return res.json({
+
+    return res.status(200).json({
       success: true,
 
       driver: {
@@ -54,7 +52,6 @@ exports.getDriverData = async (req, res) => {
 
       bus: assignment?.bus || null,
 
-      // UPDATED ROUTE
       route: formattedRoute,
     });
   } catch (err) {
@@ -67,16 +64,14 @@ exports.getDriverData = async (req, res) => {
   }
 };
 
-
-// Get all students assigned to the driver's route
-
-const Student = require("../models/Student");
-
+// =========================================
+// GET ALL STUDENTS OF DRIVER BUS
+// =========================================
 exports.getBusStudents = async (req, res) => {
   try {
-    const driverId = req.user.id;
+    const driverId = req.user._id;
 
-    // Step 1: find driver's bus
+    // Driver assignment
     const driverAssignment = await Assignment.findOne({
       driver: driverId,
       type: "driver",
@@ -89,39 +84,57 @@ exports.getBusStudents = async (req, res) => {
       });
     }
 
-    // Step 2: fetch students in same bus
+    // Student assignments
     const studentAssignments = await Assignment.find({
       bus: driverAssignment.bus,
       type: "student",
     })
-      .populate("student", "name phone")
+      .populate("student", "name phone email")
       .sort({ seatNumber: 1 });
 
-    // Step 3: branch fetch from Student model
-    const formattedStudents = await Promise.all(
-      studentAssignments.map(async (assign) => {
-        const studentData = await Student.findOne({
-          user: assign.student._id,
-        });
+    // Get all user ids
+    const userIds = studentAssignments
+      .map((item) => item.student?._id)
+      .filter(Boolean);
 
-        return {
-          _id: assign._id,
-          name: assign.student?.name,
-          phone: assign.student?.phone,
-          seatNumber: assign.seatNumber,
-          stopName: assign.stopName,
-          branch: studentData?.branch || "-",
-        };
-      })
-    );
+    // Get student profiles
+    const studentProfiles = await Student.find({
+      user: { $in: userIds },
+    });
 
-    res.status(200).json({
+    // Create branch map
+    const branchMap = {};
+
+    studentProfiles.forEach((student) => {
+      branchMap[student.user.toString()] = {
+        branch: student.branch,
+        stopName: student.stopName,
+      };
+    });
+
+    const formattedStudents = studentAssignments.map((assign) => {
+      const profile =
+        branchMap[assign.student?._id?.toString()] || {};
+
+      return {
+        _id: assign._id,
+        name: assign.student?.name || "-",
+        phone: assign.student?.phone || "-",
+        seatNumber: assign.seatNumber || "-",
+        stopName: assign.stopName || profile.stopName || "-",
+        branch: profile.branch || "-",
+      };
+    });
+
+    return res.status(200).json({
       success: true,
       totalStudents: formattedStudents.length,
       students: formattedStudents,
     });
   } catch (err) {
-    res.status(500).json({
+    console.error("getBusStudents Error:", err);
+
+    return res.status(500).json({
       success: false,
       message: err.message,
     });
