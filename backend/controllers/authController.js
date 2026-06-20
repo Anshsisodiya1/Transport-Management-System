@@ -15,6 +15,18 @@ const transporter = nodemailer.createTransport({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Helper — Generate random alphanumeric password (for drivers)
+// ─────────────────────────────────────────────────────────────────────────────
+const generateRandomPassword = (length = 8) => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Helper — Send OTP email
 // ─────────────────────────────────────────────────────────────────────────────
 const sendOtpEmail = async (email, otp, name) => {
@@ -40,29 +52,130 @@ const sendOtpEmail = async (email, otp, name) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Helper — Send welcome email to STUDENT (login = enrollment, password = enrollment)
+// ─────────────────────────────────────────────────────────────────────────────
+const sendStudentWelcomeEmail = async (email, name, enrollmentNumber) => {
+  await transporter.sendMail({
+    from:    `"University Transport" <${process.env.EMAIL_USER}>`,
+    to:      email,
+    subject: "Welcome to University Transport Management System",
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
+        <h2 style="color:#1e3a5f;margin-bottom:4px">Congratulations, ${name}!</h2>
+        <p style="color:#374151">You have successfully been registered in the <b>University Transport Management System</b>.</p>
+        <p style="color:#374151">You can log in using your enrollment number, which was provided to you by the university. Your password is the same as your enrollment number.</p>
+        <div style="background:#f3f4f6;border-radius:8px;padding:16px;margin:20px 0">
+          <p style="margin:4px 0;color:#374151"><b>Enrollment Number (Login ID):</b> ${enrollmentNumber}</p>
+          <p style="margin:4px 0;color:#374151"><b>Password:</b> ${enrollmentNumber}</p>
+        </div>
+        <p style="color:#6b7280;font-size:13px">We recommend changing your password after your first login.</p>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0"/>
+        <p style="color:#9ca3af;font-size:12px;margin:0">University Transport Management System</p>
+      </div>
+    `,
+  });
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper — Send credentials email to DRIVER (auto-generated password)
+// ─────────────────────────────────────────────────────────────────────────────
+const sendDriverCredentialsEmail = async (email, name, plainPassword) => {
+  await transporter.sendMail({
+    from:    `"University Transport" <${process.env.EMAIL_USER}>`,
+    to:      email,
+    subject: "Your Driver Account — University Transport Management System",
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
+        <h2 style="color:#1e3a5f;margin-bottom:4px">Welcome, ${name}!</h2>
+        <p style="color:#374151">Your driver account has been created on the <b>University Transport Management System</b>.</p>
+        <div style="background:#f3f4f6;border-radius:8px;padding:16px;margin:20px 0">
+          <p style="margin:4px 0;color:#374151"><b>Login Email:</b> ${email}</p>
+          <p style="margin:4px 0;color:#374151"><b>Password:</b> ${plainPassword}</p>
+        </div>
+        <p style="color:#6b7280;font-size:13px">Please change your password after your first login. Do not share this with anyone.</p>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0"/>
+        <p style="color:#9ca3af;font-size:12px;margin:0">University Transport Management System</p>
+      </div>
+    `,
+  });
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // REGISTER
 // ─────────────────────────────────────────────────────────────────────────────
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, phone, password, role, enrollmentNumber, userId } = req.body;
+
+    if (!name || !email || !phone || !role) {
+      return res.status(400).json({ message: "Name, email, phone and role are required" });
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    let finalPassword = password;
+    let plainPasswordForEmail = null;
+
+    if (role === "student") {
+      if (!enrollmentNumber) {
+        return res.status(400).json({ message: "Enrollment number is required for student" });
+      }
+
+      const existingEnrollment = await User.findOne({ enrollmentNumber });
+      if (existingEnrollment) {
+        return res.status(400).json({ message: "Enrollment number already registered" });
+      }
+
+      // Student password = enrollment number (as per university policy)
+      finalPassword = enrollmentNumber;
+    } else if (role === "driver") {
+      // Driver password is auto-generated, not taken from req.body
+      finalPassword = generateRandomPassword(8);
+      plainPasswordForEmail = finalPassword;
+    } else {
+      // admin
+      if (!password) {
+        return res.status(400).json({ message: "Password is required for admin" });
+      }
+    }
+
+    const hashedPassword = await bcrypt.hash(finalPassword, 10);
 
     const user = await User.create({
       name,
       email,
+      phone,
       password: hashedPassword,
       role,
+      enrollmentNumber: role === "student" ? enrollmentNumber : undefined,
+      userId: role === "driver" ? userId : undefined,
     });
+
+    // Fire-and-forget style, but awaited so failures are logged (don't block on email errors)
+    try {
+      if (role === "student") {
+        await sendStudentWelcomeEmail(user.email, user.name, user.enrollmentNumber);
+      } else if (role === "driver") {
+        await sendDriverCredentialsEmail(user.email, user.name, plainPasswordForEmail);
+      }
+    } catch (mailErr) {
+      console.error("WELCOME/CREDENTIALS EMAIL ERROR:", mailErr);
+      // Don't fail registration just because email didn't send
+    }
 
     res.status(201).json({
       message: "User registered successfully",
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        enrollmentNumber: user.enrollmentNumber || undefined,
+        userId: user.userId || undefined,
+      },
     });
   } catch (error) {
     console.error("REGISTER ERROR:", error);
@@ -75,9 +188,22 @@ exports.register = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 exports.login = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, enrollmentNumber, password, role } = req.body;
 
-    const user = await User.findOne({ email });
+    let user;
+
+    if (role === "student") {
+      if (!enrollmentNumber) {
+        return res.status(400).json({ message: "Enrollment number is required" });
+      }
+      user = await User.findOne({ enrollmentNumber, role: "student" });
+    } else {
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      user = await User.findOne({ email });
+    }
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -101,7 +227,12 @@ exports.login = async (req, res) => {
       message: "Login successful",
       token,
       role: user.role,
-      user: { id: user._id, name: user.name, email: user.email },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        enrollmentNumber: user.enrollmentNumber || undefined,
+      },
     });
   } catch (error) {
     console.error("LOGIN ERROR:", error);

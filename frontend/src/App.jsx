@@ -11,6 +11,7 @@ import {
 
 // Pages
 import Login from "./pages/Login";
+import AdminLogin from "./pages/AdminLogin";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import Buses from "./pages/Buses";
@@ -56,8 +57,10 @@ function App() {
         )}
 
         <Routes>
-          {/*  Public Route */}
+          {/*  Public Routes */}
           <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
 
           {/* Admin Routes */}
           <Route

@@ -4,9 +4,9 @@ const User = require("../models/User");
 const Route = require("../models/Route");
 const Student = require("../models/Student");
 
-// =========================================
+
 // DRIVER DASHBOARD DATA
-// =========================================
+
 exports.getDriverData = async (req, res) => {
   try {
     const driverId = req.user._id;
